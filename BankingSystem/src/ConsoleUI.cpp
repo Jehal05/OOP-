@@ -210,7 +210,25 @@ void banner(Kind kind, const std::string& msg) {
         case Kind::Warning: color = c::yellow(); icon = g.warn; label = "WARNING"; break;
         case Kind::Info:    color = c::blue();   icon = g.info; label = "INFO";    break;
     }
-    std::cout << "\n " << color << c::bold() << icon << " " << label << c::reset() << color << "  " << msg << c::reset() << "\n";
+    const std::string head = std::string(" ") + icon + " " + label + "  ";
+    const size_t indent = visibleWidth(head), room = 78 > indent ? 78 - indent : 40;
+    // word-wrap the message so the banner never runs past 80 columns
+    std::vector<std::string> lines;
+    std::string cur, word;
+    auto flush = [&]() {
+        if (word.empty()) return;
+        if (!cur.empty() && cur.size() + 1 + word.size() > room) { lines.push_back(cur); cur.clear(); }
+        cur += (cur.empty() ? "" : " ") + word;
+        word.clear();
+    };
+    for (char ch : msg) { if (ch == ' ') flush(); else word += ch; }
+    flush();
+    if (!cur.empty()) lines.push_back(cur);
+    std::cout << "\n";
+    for (size_t i = 0; i < lines.size(); ++i) {
+        if (i == 0) std::cout << color << c::bold() << head << c::reset() << color << lines[i] << c::reset() << "\n";
+        else std::cout << std::string(indent, ' ') << color << lines[i] << c::reset() << "\n";
+    }
 }
 
 // ===================== widgets =====================
@@ -245,6 +263,7 @@ std::string readLine(const std::string& prompt) {
     std::cout.flush();
     std::string s;
     if (!std::getline(std::cin, s)) throw InputClosed{};
+    if (!stdinIsTty()) std::cout << c::bold() << util::trim(s) << c::reset() << "\n";   // echo like a terminal would (scripted runs)
     return util::trim(s);
 }
 
@@ -281,9 +300,9 @@ double readAmount(const std::string& prompt) {
     }
 }
 
-std::optional<double> readOptionalAmount(const std::string& prompt) {
+std::optional<double> readOptionalAmount(const std::string& prompt, const std::string& hint) {
     for (;;) {
-        std::string s = readLine(prompt + c::dim() + " (Enter to skip)" + c::reset());
+        std::string s = readLine(prompt + c::dim() + " " + hint + c::reset());
         if (s.empty()) return std::nullopt;
         double v;
         if (parseAmount(s, v) && v >= 0 && v <= 1e9) return v;
@@ -292,10 +311,15 @@ std::optional<double> readOptionalAmount(const std::string& prompt) {
 }
 
 std::string readPin(const std::string& prompt) {
-    if (!stdinIsTty()) return readLine(prompt);                 // scripted/redirected input
     std::cout << " " << c::cyan() << G().bullet << c::reset() << " " << prompt << " ";
     std::cout.flush();
     std::string pin;
+    if (!stdinIsTty()) {                                        // scripted/redirected input: read a line, show it masked
+        if (!std::getline(std::cin, pin)) throw InputClosed{};
+        for (size_t i = 0; i < pin.size(); ++i) std::cout << (g_unicode ? "\xE2\x80\xA2" : "*");
+        std::cout << "\n";
+        return pin;
+    }
 #ifdef _WIN32
     for (int ch; (ch = _getch()) != '\r' && ch != '\n';) {
         if (ch == 8 || ch == 127) { if (!pin.empty()) { pin.pop_back(); std::cout << "\b \b"; } }
@@ -332,6 +356,7 @@ void pause() {
     std::cout.flush();
     std::string s;
     if (!std::getline(std::cin, s)) throw InputClosed{};
+    if (!stdinIsTty()) std::cout << "\n";
 }
 
 } // namespace ui

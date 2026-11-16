@@ -594,7 +594,7 @@ void Bank::seedDemoData() {
     goals_.add(std::make_unique<SavingsGoal>("G002", "SB1001", "Emergency Fund", 150000, 45000, util::addDays(now, 300), at(30, 10, 5)));
     payees_.add(std::make_unique<Beneficiary>("SB1001", "Ravi", "CA2001", "Ravi Kumar", at(50, 12, 0)));
     alerts_.add(std::make_unique<Alert>("A001", "CA2001", oddHourRef, "OddHour",
-                                        "Debit of " + util::money(9800) + " at an unusual hour (" + util::fmtShort(at(22, 2, 40)) + ")",
+                                        "Debit of " + util::money(9800) + " at 02:40, an unusual hour",
                                         at(22, 2, 40)));
 
     audit_.log("SYSTEM", "SEED_DATA", "demo accounts, users, transactions, loans and goals created");

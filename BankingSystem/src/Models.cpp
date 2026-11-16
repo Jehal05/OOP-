@@ -39,21 +39,21 @@ const std::vector<Category>& allCategories() {
 Transaction::Transaction(std::string ref, std::string acc, TxType t, Category c, double amt,
                          double balAfter, time_t ts, std::string note)
     : refId_(std::move(ref)), accNo_(std::move(acc)), type_(t), cat_(c), amount_(amt),
-      balanceAfter_(balAfter), ts_(ts), note_(util::sanitize(note)) {}
+      balanceAfter_(balAfter), ts_(ts), note_(util::cleanText(note)) {}
 
 std::string Transaction::toCsv() const {
     char amt[32], bal[32];
     std::snprintf(amt, sizeof amt, "%.2f", amount_);
     std::snprintf(bal, sizeof bal, "%.2f", balanceAfter_);
     return util::join({refId_, accNo_, std::to_string((int)type_), std::to_string((int)cat_), amt, bal,
-                       util::fmtDateTime(ts_), note_}, ',');
+                       util::fmtDateTime(ts_), util::csvEscape(note_)}, ',');
 }
 std::unique_ptr<Transaction> Transaction::fromCsv(const std::string& line) {
     auto p = util::split(line, ',');
     time_t ts;
     if (p.size() < 7 || !util::parseDateTime(p[6], ts)) return nullptr;
     return std::make_unique<Transaction>(p[0], p[1], (TxType)std::stoi(p[2]), (Category)std::stoi(p[3]),
-                                         std::stod(p[4]), std::stod(p[5]), ts, p.size() > 7 ? p[7] : "");
+                                         std::stod(p[4]), std::stod(p[5]), ts, p.size() > 7 ? util::csvUnescape(p[7]) : "");
 }
 std::ostream& operator<<(std::ostream& os, const Transaction& t) {
     return os << t.refId_ << " | " << util::fmtDateTime(t.ts_) << " | " << toString(t.type_) << " | "
@@ -106,14 +106,14 @@ std::unique_ptr<SavingsGoal> SavingsGoal::fromCsv(const std::string& line) {
 Alert::Alert(std::string id, std::string acc, std::string ref, std::string rule, std::string msg,
              time_t ts, bool reviewed, bool seen)
     : id_(std::move(id)), accNo_(std::move(acc)), refId_(std::move(ref)), rule_(std::move(rule)),
-      message_(util::sanitize(msg)), ts_(ts), reviewed_(reviewed), seen_(seen) {}
+      message_(util::cleanText(msg)), ts_(ts), reviewed_(reviewed), seen_(seen) {}
 std::string Alert::toCsv() const {
-    return util::join({id_, accNo_, refId_, rule_, message_, util::fmtDateTime(ts_),
+    return util::join({id_, accNo_, refId_, rule_, util::csvEscape(message_), util::fmtDateTime(ts_),
                        reviewed_ ? "1" : "0", seen_ ? "1" : "0"}, ',');
 }
 std::unique_ptr<Alert> Alert::fromCsv(const std::string& line) {
     auto p = util::split(line, ',');
     time_t ts;
     if (p.size() < 8 || !util::parseDateTime(p[5], ts)) return nullptr;
-    return std::make_unique<Alert>(p[0], p[1], p[2], p[3], p[4], ts, p[6] == "1", p[7] == "1");
+    return std::make_unique<Alert>(p[0], p[1], p[2], p[3], util::csvUnescape(p[4]), ts, p[6] == "1", p[7] == "1");
 }
