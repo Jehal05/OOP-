@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    actor C as Customer
+    participant App as App (UI)
+    participant B as Bank
+    participant S as Account (sender)
+    participant D as Account (receiver)
+    participant R as Repository
+    participant F as FraudDetector
+    participant L as AuditLogger
+    C->>App: choose payee, amount, category
+    App->>C: confirmation card (Y/N)
+    C->>App: yes
+    App->>B: transfer(from, to, amount, category)
+    B->>B: validate accounts, not same, receiver active
+    B->>S: withdraw(amount, fee)
+    alt insufficient funds
+        S-->>B: InsufficientFundsException
+        B->>B: failedOps + 1
+        B-->>App: error
+        App-->>C: red error banner
+    else enough balance
+        S-->>B: balance reduced
+        B->>D: deposit(amount)
+        B->>R: append TransferOut and TransferIn
+        B->>R: patch both balances in place (seekp)
+        B->>F: evaluate(tx, context)
+        F-->>B: matching rules
+        opt any rule fires
+            B->>R: save Alert
+            B->>L: FRAUD_ALERT
+        end
+        B-->>App: Transaction
+        App-->>C: receipt card and saved receipt file
+    end

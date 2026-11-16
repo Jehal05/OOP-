@@ -1,0 +1,31 @@
+classDiagram
+    direction LR
+    class Bank {
+        +login() deposit() withdraw() transfer()
+        +applyLoan() approveLoan() payEMI()
+        +contributeToGoal() addPayee()
+        +applyMonthlyInterest()
+    }
+    class Repository~T~ {
+        +load() saveAll() appendToFile()
+        +patch(key) find(key) where(pred)
+    }
+    class FraudDetector {
+        -rules_ : vector of unique_ptr FraudRule
+        +evaluate(tx, ctx)
+    }
+    class FraudRule {
+        <<abstract>>
+        +check(tx, ctx)* bool
+        +message(tx)* string
+    }
+    class AuditLogger { +log() readAll() search() }
+    Bank o-- "7" Repository : users accounts txns payees goals loans alerts
+    Bank *-- FraudDetector
+    Bank *-- AuditLogger
+    FraudDetector o-- "5" FraudRule
+    FraudRule <|-- LargeAmountRule
+    FraudRule <|-- RapidTransactionRule
+    FraudRule <|-- NewBeneficiaryHighValueRule
+    FraudRule <|-- OddHourRule
+    FraudRule <|-- RepeatedFailureRule

@@ -1,0 +1,26 @@
+flowchart TB
+    subgraph UI["Presentation layer"]
+        direction LR
+        main["main.cpp"] --> App["App and AdminApp<br/>menus and screens"] --> CUI["ConsoleUI<br/>colors, boxes, tables,<br/>prompts, charts"]
+    end
+    subgraph BL["Business layer"]
+        direction LR
+        Bank["Bank controller<br/>all business rules"] --> Fraud["FraudDetector<br/>5 polymorphic rules"]
+        Bank --> Stmt["Statement and<br/>SpendingAnalyzer"]
+        Bank --> Audit["AuditLogger<br/>append-only"]
+    end
+    subgraph DM["Domain model"]
+        direction LR
+        Acc["Account<br/>hierarchy"] ~~~ Usr["User<br/>hierarchy"] ~~~ Loan["Loan<br/>hierarchy"] ~~~ Rec["Transaction, Goal,<br/>Beneficiary, Alert"]
+    end
+    subgraph DL["Persistence layer"]
+        direction LR
+        Repo["Repository of T<br/>load, save, append,<br/>in-place patch"] --> Files[("CSV files<br/>and audit.log")]
+    end
+    UI --> BL
+    BL --> DM
+    BL --> DL
+    style UI fill:#e8f1ff,stroke:#4a7bd0
+    style BL fill:#fff4e0,stroke:#d08a2e
+    style DM fill:#eaf7ec,stroke:#3d9a50
+    style DL fill:#f3e8ff,stroke:#8a55c4
