@@ -1,0 +1,59 @@
+# PIN lockout, admin unlock, then a fraud alert and an FD early-withdrawal penalty
+1
+CA2001
+0000              # wrong PIN (2 left)
+<enter>
+1
+CA2001
+1111              # wrong PIN (1 left)
+<enter>
+1
+CA2001
+2222              # third wrong PIN -> locked
+<enter>
+1
+CA2001
+2345              # correct PIN but account is locked
+<enter>
+2                 # admin unlocks
+admin
+admin123
+7
+1
+CA2001
+<enter>
+0
+9
+<enter>
+1                 # Ravi can log in again
+CA2001
+2345
+1                 #   Transactions
+2                 #   Withdraw 60,000 -> large amount alert
+60000
+4                 #   Shopping
+<enter>
+<enter>
+0
+9
+<enter>
+1                 # log in again: dashboard shows the unread alert
+CA2001
+2345
+8                 #   Security & alerts
+0
+9
+<enter>
+1                 # Meera withdraws early from her fixed deposit
+FD3001
+3456
+1
+2
+10000
+<enter>
+y
+<enter>
+0
+9
+<enter>
+3

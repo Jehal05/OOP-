@@ -1,0 +1,81 @@
+# Asha (SB1001) walks through every customer feature
+1                 # home: customer login
+SB1001
+1234
+1                 # dashboard: Transactions
+1                 #   Deposit
+25000
+<enter>
+2                 #   Withdraw
+2500
+1                 #   category Food
+<enter>           #   confirm (default yes)
+<enter>
+3                 #   Transfer
+1                 #   saved payee "Ravi"
+5000
+5                 #   category Rent
+y
+<enter>
+0                 #   back
+2                 # dashboard: Smart statement
+1                 #   view statement
+<enter>           #   from
+<enter>           #   to
+2                 #   type = Withdraw
+<enter>           #   category any
+<enter>           #   min
+<enter>           #   max
+2                 #   sort by amount
+1                 #   largest first
+<enter>
+2                 #   monthly summary
+<enter>
+3                 #   export
+<enter>
+<enter>
+<enter>
+<enter>
+<enter>
+<enter>
+<enter>
+<enter>
+<enter>
+0                 #   back
+3                 # dashboard: Spending insights
+<enter>
+<enter>
+4                 # dashboard: Savings goals
+1                 #   create goal
+Bike
+80000
+{DATE+180}
+<enter>
+2                 #   add money
+G001
+5000
+<enter>
+0
+5                 # dashboard: Loans & EMI
+2                 #   EMI calculator
+1                 #   Home loan
+2500000
+240
+1                 #   start month
+<enter>
+3                 #   amortization of L001
+L001
+<enter>           #   default start month
+<enter>
+0
+6                 # dashboard: Beneficiaries
+0
+7                 # dashboard: Interest & FD simulator
+100000
+5
+<enter>
+8                 # dashboard: Security & alerts
+0
+9                 # logout
+<enter>
+3                 # exit
