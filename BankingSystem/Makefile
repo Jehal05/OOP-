@@ -1,6 +1,10 @@
 # Nova Bank - Banking & Management System
 CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -O2
+# On Windows (MinGW) link the runtime statically so a different libstdc++-6.dll on PATH cannot break startup
+ifeq ($(OS),Windows_NT)
+LDFLAGS  += -static
+endif
 INC      := -Iinclude
 BUILD    := build
 SRC      := $(filter-out src/main.cpp,$(wildcard src/*.cpp))
@@ -11,7 +15,7 @@ TESTS    := $(patsubst tests/%.cpp,$(BUILD)/%,$(wildcard tests/test_*.cpp))
 all: bank
 
 bank: $(OBJ) $(BUILD)/main.o
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(BUILD)/%.o: src/%.cpp $(wildcard include/*.h) | $(BUILD)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
@@ -20,7 +24,7 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 $(BUILD)/test_%: tests/test_%.cpp $(OBJ) | $(BUILD)
-	$(CXX) $(CXXFLAGS) $(INC) -Itests $< $(OBJ) -o $@
+	$(CXX) $(CXXFLAGS) $(INC) -Itests $< $(OBJ) -o $@ $(LDFLAGS)
 
 run: bank
 	./bank
