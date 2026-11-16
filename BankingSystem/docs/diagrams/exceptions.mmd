@@ -1,0 +1,11 @@
+classDiagram
+    direction LR
+    class exception["std::exception"]
+    exception <|-- BankException
+    BankException <|-- InsufficientFundsException
+    BankException <|-- InvalidAmountException
+    BankException <|-- AccountNotFoundException
+    BankException <|-- AuthenticationException
+    BankException <|-- AccountLockedException
+    BankException <|-- LoanException
+    BankException <|-- FileIOException

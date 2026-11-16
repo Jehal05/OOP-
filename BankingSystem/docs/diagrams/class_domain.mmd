@@ -1,0 +1,44 @@
+classDiagram
+    direction TB
+    class Account {
+        <<abstract>>
+        -accNo_ holder_ balance_
+        +deposit(amount)
+        +withdraw(amount, fee)
+        +operator+=(amount)
+        +typeName()* string
+        +calculateInterest(years)* double
+        +spendable() double
+        +withdrawalFee(amount, now) double
+    }
+    class SavingsAccount { simple interest, minimum balance }
+    class StudentSavingsAccount { zero minimum balance }
+    class CurrentAccount { overdraft limit }
+    class FixedDepositAccount { lock-in, compound interest, 1 percent early exit fee }
+    Account <|-- SavingsAccount
+    SavingsAccount <|-- StudentSavingsAccount
+    Account <|-- CurrentAccount
+    Account <|-- FixedDepositAccount
+    class User {
+        <<abstract>>
+        -salt_ hash_ failed_ locked_
+        +verifyPin(pin) bool
+        +recordFailure()
+        +unlock()
+        +role()* string
+    }
+    class Customer { -accNo_ }
+    class Admin
+    User <|-- Customer
+    User <|-- Admin
+    class Loan {
+        <<abstract>>
+        +emi() double
+        +schedule() Installments
+        +annualRate()* double
+        +maxMonths()* int
+        +maxPrincipal()* double
+    }
+    Loan <|-- HomeLoan
+    Loan <|-- EducationLoan
+    Loan <|-- PersonalLoan

@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> Pending : customer applies<br/>validated against type limits
+    Pending --> Active : admin approves<br/>amount credited to account
+    Pending --> Rejected : admin rejects with reason
+    Active --> Active : pay EMI (paid + 1)
+    Active --> Closed : last EMI paid
+    Active --> Closed : prepay outstanding principal
+    Rejected --> [*]
+    Closed --> [*]

@@ -1,0 +1,17 @@
+flowchart TD
+    A([Enter ID and PIN]) --> B{"User exists and<br/>role matches?"}
+    B -- no --> C["Audit LOGIN_FAILED<br/>generic error, no hints"]
+    B -- yes --> D{"Locked?"}
+    D -- yes --> E["Audit LOGIN_BLOCKED<br/>AccountLockedException"]
+    D -- no --> F{"Hash of salt + PIN<br/>matches?"}
+    F -- no --> G["failed attempts + 1"]
+    G --> H{"3 failures?"}
+    H -- yes --> I["Lock user<br/>Audit ACCOUNT_LOCKED"] --> E
+    H -- no --> J["Show attempts remaining"]
+    F -- yes --> K{"Linked account<br/>still active?"}
+    K -- no --> L["Account closed error"]
+    K -- yes --> M["Reset failures<br/>Audit LOGIN_SUCCESS"] --> N([Session starts])
+    E --> O["Admin unlocks user<br/>Audit UNLOCK_ACCOUNT"] --> A
+    style N fill:#d4edda,stroke:#3d9a50
+    style I fill:#f8d7da,stroke:#c0392b
+    style E fill:#f8d7da,stroke:#c0392b
