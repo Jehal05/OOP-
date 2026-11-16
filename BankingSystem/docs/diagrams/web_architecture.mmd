@@ -1,0 +1,7 @@
+flowchart LR
+  B["Browser UI<br/>web/public: HTML, CSS, JS"] -- "JSON over HTTP<br/>127.0.0.1:8080<br/>HttpOnly session cookie" --> S["bankweb server<br/>web/server.cpp<br/>cpp-httplib + one mutex"]
+  S -- "calls" --> K["Bank<br/>rules, fraud screening, audit"]
+  K --> R["Repository&lt;T&gt; x7<br/>CSV files in data/"]
+  K --> F["FraudDetector<br/>5 FraudRule subclasses"]
+  K --> A["AuditLogger<br/>append-only audit.log"]
+  C["Console app<br/>src/main.cpp"] -- "same classes" --> K

@@ -4,6 +4,7 @@ CXXFLAGS ?= -std=c++17 -Wall -Wextra -O2
 # On Windows (MinGW) link the runtime statically so a different libstdc++-6.dll on PATH cannot break startup
 ifeq ($(OS),Windows_NT)
 LDFLAGS  += -static
+WINLIBS  := -lws2_32 -lwsock32
 endif
 INC      := -Iinclude
 BUILD    := build
@@ -11,8 +12,15 @@ SRC      := $(filter-out src/main.cpp,$(wildcard src/*.cpp))
 OBJ      := $(patsubst src/%.cpp,$(BUILD)/%.o,$(SRC))
 TESTS    := $(patsubst tests/%.cpp,$(BUILD)/%,$(wildcard tests/test_*.cpp))
 
-.PHONY: all run test valgrind widths screenshots diagrams check clean
+.PHONY: all web run test valgrind widths screenshots diagrams check clean
 all: bank
+
+# Localhost web version (same Bank classes behind a JSON API + browser UI)
+bankweb: web/server.cpp $(OBJ) web/third_party/httplib.h
+	$(CXX) $(CXXFLAGS) $(INC) -isystem web/third_party $< $(OBJ) -o $@ -pthread $(LDFLAGS) $(WINLIBS)
+
+web: bankweb
+	./bankweb
 
 bank: $(OBJ) $(BUILD)/main.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
@@ -47,4 +55,4 @@ diagrams:             ## regenerate docs/img/*.png from docs/diagrams/*.mmd (nee
 check: test widths valgrind   ## run everything
 
 clean:
-	rm -rf $(BUILD) bank
+	rm -rf $(BUILD) bank bankweb

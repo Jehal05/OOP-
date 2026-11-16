@@ -9,3 +9,4 @@ receipts/*
 !receipts/.gitkeep
 __pycache__/
 *.pyc
+bankweb

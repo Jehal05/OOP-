@@ -7,7 +7,7 @@ A complete **C++17 object-oriented banking application** for the terminal: custo
 > Mini project for the Object-Oriented Programming lab (Experiment 11). It combines everything from Experiments 1-10: classes and access specifiers, constructors and the Rule of 5, inheritance, runtime and compile-time polymorphism, templates, STL, exceptions and file I/O.
 
 ## Contents
-[Screenshots](#screenshots) | [Features](#features) | [Quick start](#quick-start) | [Demo logins](#demo-logins) | [Architecture](#architecture) | [Class diagrams](#class-diagrams) | [Flowcharts](#flowcharts) | [OOP concepts used](#oop-concepts-used-and-where) | [Data model](#data-model) | [UI/UX design](#uiux-design) | [Testing](#testing-and-quality) | [Project structure](#project-structure) | [Limitations](#limitations-and-honest-notes) | [Viva Q&A](docs/VIVA.md)
+[Screenshots](#screenshots) | [Features](#features) | [Quick start](#quick-start) | [Demo logins](#demo-logins) | [Architecture](#architecture) | [Web version](#web-version-runs-on-localhost) | [Class diagrams](#class-diagrams) | [Flowcharts](#flowcharts) | [OOP concepts used](#oop-concepts-used-and-where) | [Data model](#data-model) | [UI/UX design](#uiux-design) | [Testing](#testing-and-quality) | [Project structure](#project-structure) | [Limitations](#limitations-and-honest-notes) | [Viva Q&A](docs/VIVA.md)
 
 ---
 
@@ -95,6 +95,78 @@ Demo data is created automatically the first time you run the program (it is reg
 | Admin | `admin` | `admin123` | Approves loans, reviews alerts, unlocks users, reads the audit log |
 
 Things worth trying: withdraw `60000` from `CA2001` to trigger a fraud alert; enter a wrong PIN three times to see the lockout and then unlock the user as admin; withdraw from `FD3001` to see the penalty; approve loan `L002` as admin.
+
+---
+
+## Web version (runs on localhost)
+
+The same Bank engine is also available as a **browser app**. A small C++ server (`web/server.cpp`, built on the single-header [cpp-httplib](https://github.com/yhirose/cpp-httplib)) exposes the `Bank` classes as a JSON API and serves a plain HTML/CSS/JavaScript front end. No Node, no frameworks, no database: it uses the same CSV files as the console app, so both versions share data.
+
+<p align="center"><img src="docs/img/web_architecture.png" width="900"></p>
+
+### Run it
+
+```bash
+cd BankingSystem
+make bankweb          # builds ./bankweb (about 15 s the first time)
+./bankweb             # then open http://localhost:8080
+```
+
+```text
+./bankweb --port 8090      use another port
+./bankweb --data DIR       use another data folder (or BANK_DATA_DIR)
+BANK_TIMEOUT_SEC=300       idle session timeout (default 600 s)
+```
+
+On **Windows (MinGW)** run `mingw32-make bankweb` then `.\bankweb.exe`. Press `Ctrl+C` to stop the server. The Windows build of the web server has not been tested by me (the Linux build has); if it fails, WSL is the safe route.
+
+Log in with the same demo accounts (`SB1001`/`1234`, `CA2001`/`2345`, `FD3001`/`3456`, `ST1001`/`4567`, admin `admin`/`admin123`). The login page has click-to-fill chips.
+
+### What the web UI adds
+
+- Dashboard with balance card, balance trend, monthly in/out and recent activity.
+- Confirmation dialogs before money moves (the browser version of the console Y/N guard), live recipient-name lookup, printable receipts.
+- Fraud alerts pop up as a toast the moment a transaction triggers a rule, with an unread badge in the sidebar.
+- Statement filters, sorting, running balance and `.txt` export; spending bars; goal progress bars; EMI calculator with live results and amortization table; interest simulator with a line chart.
+- Full admin console: account search/open/rename/close, loan approvals, fraud review, unlock users, reports and the audit log.
+
+### Screenshots (captured from the running web app)
+
+| | |
+|---|---|
+| **Login**<br><img src="docs/img/web/01_login.png" width="480"> | **Dashboard**<br><img src="docs/img/web/03_dashboard.png" width="480"> |
+| **Receipt** after a deposit<br><img src="docs/img/web/04_receipt.png" width="480"> | **Transfer confirmation**<br><img src="docs/img/web/05_transfer_confirm.png" width="480"> |
+| **Smart statement**<br><img src="docs/img/web/06_statement.png" width="480"> | **Spending categories**<br><img src="docs/img/web/07_spending.png" width="480"> |
+| **Savings goals**<br><img src="docs/img/web/08_goals.png" width="480"> | **Loans and EMI calculator**<br><img src="docs/img/web/09_loans_emi.png" width="480"> |
+| **Amortization table**<br><img src="docs/img/web/10_amortization.png" width="480"> | **Interest simulator**<br><img src="docs/img/web/12_simulator.png" width="480"> |
+| **Fraud alert raised live**<br><img src="docs/img/web/13_fraud_toast.png" width="480"> | **Security and alerts**<br><img src="docs/img/web/14_security_alerts.png" width="480"> |
+| **PIN lockout**<br><img src="docs/img/web/15_locked.png" width="480"> | **FD penalty shown before withdrawing**<br><img src="docs/img/web/16_fd_penalty.png" width="480"> |
+| **Admin overview**<br><img src="docs/img/web/17_admin_overview.png" width="480"> | **Admin accounts**<br><img src="docs/img/web/18_admin_accounts.png" width="480"> |
+| **Loan approvals**<br><img src="docs/img/web/19_admin_loans.png" width="480"> | **Fraud review**<br><img src="docs/img/web/20_admin_fraud.png" width="480"> |
+| **Reports**<br><img src="docs/img/web/22_admin_reports.png" width="480"> | **Audit log**<br><img src="docs/img/web/23_admin_audit.png" width="480"> |
+
+Regenerate them with `make bankweb && tools/run_web_shots.sh` (needs Node and Chrome; it starts a throw-away server with fresh demo data).
+
+### API at a glance
+
+All endpoints are JSON under `/api`. Errors come back as `{"error": "message"}` with a matching status (400 validation, 401 not logged in or wrong PIN, 403 wrong role, 423 locked).
+
+| Area | Endpoints |
+|---|---|
+| Session | `POST /login`, `POST /logout`, `GET /me` |
+| Money | `POST /deposit`, `POST /withdraw`, `POST /transfer`, `GET /fdfee`, `GET /lookup`, `GET /receipt` |
+| Insight | `GET /dashboard`, `GET /statement`, `GET /statement.txt`, `GET /spending`, `GET /simulate` |
+| Goals, loans, payees | `GET/POST /goals`, `POST /goals/contribute`, `GET /emi`, `GET/POST /loans`, `/loans/apply`, `/loans/schedule`, `/loans/pay`, `/loans/prepay`, `GET/POST /payees`, `POST /payees/remove` |
+| Security | `GET /alerts`, `POST /alerts/seen`, `POST /pin` |
+| Admin | `/admin/overview`, `/admin/accounts` (+ `update`, `close`), `/admin/history`, `/admin/loans` (+ `approve`, `reject`), `/admin/alerts` (+ `review`), `/admin/locked`, `/admin/unlock`, `/admin/interest`, `/admin/reports`, `/admin/audit` |
+
+### Web security notes
+
+- Listens on `127.0.0.1` only, so other machines cannot reach it. Requests whose `Host` header is not localhost are rejected (DNS-rebinding guard).
+- Session cookie is `HttpOnly` and `SameSite=Strict`; `POST` requires `Content-Type: application/json`, which a cross-site form cannot send.
+- The UI builds the page with `textContent` instead of `innerHTML`, and a Content-Security-Policy blocks inline scripts and outside resources.
+- Every ownership check (your own loans, goals, receipts) is enforced in the server, not just hidden in the UI.
+- It is a learning project: plain HTTP, a single process serialized by one mutex, and the educational PIN hash. Do not expose it to the internet.
 
 ---
 
@@ -207,6 +279,7 @@ BankingSystem/
 ├── src/            implementations + main.cpp
 ├── tests/          7 test suites + a tiny assert harness
 ├── scenarios/      scripted demo sessions (customer, admin, lockout and fraud)
+├── web/            localhost web version: server.cpp, public/ (HTML, CSS, JS), third_party/httplib.h
 ├── tools/          screenshot renderer, scenario runner, width checker, Valgrind script
 ├── docs/           diagrams (.mmd sources), rendered images, VIVA.md
 ├── data/ statements/ receipts/    created at runtime (git-ignored)
