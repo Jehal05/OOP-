@@ -53,7 +53,7 @@ void barChart(const std::vector<std::string>& labels, const std::vector<double>&
 std::string readLine(const std::string& prompt);
 int readInt(const std::string& prompt, int min, int max, std::optional<int> def = std::nullopt);
 double readAmount(const std::string& prompt);
-std::optional<double> readOptionalAmount(const std::string& prompt);        // blank = skip
+std::optional<double> readOptionalAmount(const std::string& prompt, const std::string& hint = "(Enter to skip)");   // blank = skip
 std::string readPin(const std::string& prompt);                              // masked on a real terminal
 bool confirm(const std::string& prompt, bool def = false);
 void pause();

@@ -85,7 +85,7 @@ double FixedDepositAccount::calculateInterest(double years) const {
     return balance() * (std::pow(1.0 + rate_ / 100.0, years) - 1.0);
 }
 std::string FixedDepositAccount::describe() const {
-    return two(rate_) + "% p.a. compounded yearly | lock-in " + std::to_string(lockInMonths_) +
-           " months | matures " + util::fmtDate(maturityDate()) + " | 1% early-withdrawal penalty";
+    return two(rate_) + "% p.a. | lock-in " + std::to_string(lockInMonths_) + " months | matures " +
+           util::fmtDate(maturityDate()) + " | 1% early exit fee";
 }
 std::string FixedDepositAccount::extraCsv() const { return two(rate_) + "," + std::to_string(lockInMonths_); }

@@ -9,8 +9,8 @@ void AuditLogger::log(const std::string& actor, const std::string& action, const
     if (!parent.empty()) std::filesystem::create_directories(parent);
     std::ofstream out(path_, std::ios::app | std::ios::binary);
     if (!out) throw FileIOException("cannot write audit log " + path_);
-    out << util::fmtDateTime(util::now()) << " | " << util::sanitize(actor) << " | " << util::sanitize(action)
-        << " | " << util::sanitize(details) << '\n';
+    out << util::fmtDateTime(util::now()) << " | " << util::cleanText(actor) << " | " << util::cleanText(action)
+        << " | " << util::cleanText(details) << '\n';
 }
 
 std::vector<std::string> AuditLogger::readAll() const {

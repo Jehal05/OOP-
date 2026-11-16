@@ -35,6 +35,12 @@ std::string money(double v) {
     return "\xE2\x82\xB9" + n;
 }
 
+std::string moneyShort(double v) {
+    std::string n = number(v, 0);
+    if (!n.empty() && n[0] == '-') return "-\xE2\x82\xB9" + n.substr(1);
+    return "\xE2\x82\xB9" + n;
+}
+
 std::string fixedWidth(double v) {
     char buf[64];
     std::snprintf(buf, sizeof buf, "%015.2f", v);
@@ -125,6 +131,32 @@ std::string join(const std::vector<std::string>& p, char sep) {
 std::string sanitize(const std::string& s) {
     std::string r = trim(s);
     for (auto& c : r) if (c == ',' || c == '\n' || c == '\r' || c == '|') c = ' ';
+    return r;
+}
+std::string cleanText(const std::string& s) {
+    std::string r = trim(s);
+    for (auto& c : r) if (c == '\n' || c == '\r') c = ' ';
+    return r;
+}
+std::string csvEscape(const std::string& s) {
+    std::string r;
+    for (char c : s) {
+        if (c == '%') r += "%25"; else if (c == ',') r += "%2C"; else if (c == '\n') r += "%0A"; else if (c == '\r') r += "%0D"; else r += c;
+    }
+    return r;
+}
+std::string csvUnescape(const std::string& s) {
+    std::string r;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '%' && i + 2 < s.size()) {
+            std::string code = s.substr(i + 1, 2);
+            if (code == "25") { r += '%'; i += 2; continue; }
+            if (code == "2C") { r += ','; i += 2; continue; }
+            if (code == "0A") { r += '\n'; i += 2; continue; }
+            if (code == "0D") { r += '\r'; i += 2; continue; }
+        }
+        r += s[i];
+    }
     return r;
 }
 bool isDigits(const std::string& s) {

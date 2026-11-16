@@ -15,10 +15,10 @@ std::string toString(LoanStatus s) {
 
 Loan::Loan(std::string id, std::string accNo, double principal, int months, LoanStatus st, int paid,
            time_t applied, std::string note)
-    : id_(std::move(id)), accNo_(std::move(accNo)), note_(util::sanitize(note)), principal_(principal),
+    : id_(std::move(id)), accNo_(std::move(accNo)), note_(util::cleanText(note)), principal_(principal),
       months_(months), status_(st), paid_(paid), appliedOn_(applied) {}
 
-void Loan::setNote(const std::string& n) { note_ = util::sanitize(n); }
+void Loan::setNote(const std::string& n) { note_ = util::cleanText(n); }
 
 static double round2(double v) { return std::round(v * 100.0) / 100.0; }
 
@@ -58,7 +58,7 @@ double Loan::nextInstallment() const {
 std::string Loan::toCsv() const {
     char p[32]; std::snprintf(p, sizeof p, "%.2f", principal_);
     return util::join({id_, typeCode(), accNo_, p, std::to_string(months_), std::to_string((int)status_),
-                       std::to_string(paid_), util::fmtDateTime(appliedOn_), note_}, ',');
+                       std::to_string(paid_), util::fmtDateTime(appliedOn_), util::csvEscape(note_)}, ',');
 }
 
 std::unique_ptr<Loan> Loan::create(const std::string& code, std::string id, std::string accNo, double principal,
@@ -74,5 +74,5 @@ std::unique_ptr<Loan> Loan::fromCsv(const std::string& line) {
     time_t t;
     if (p.size() < 8 || !util::parseDateTime(p[7], t)) return nullptr;
     return create(p[1], p[0], p[2], std::stod(p[3]), std::stoi(p[4]), (LoanStatus)std::stoi(p[5]), std::stoi(p[6]), t,
-                  p.size() > 8 ? p[8] : "");
+                  p.size() > 8 ? util::csvUnescape(p[8]) : "");
 }

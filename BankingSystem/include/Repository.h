@@ -10,14 +10,17 @@
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <unordered_map>
 #include "Exceptions.h"
 
 template <typename T>
 class Repository {
     std::string path_;
     std::vector<std::unique_ptr<T>> items_;
+    std::unordered_map<std::string, T*> index_;     // key -> record, O(1) find()
     size_t skipped_ = 0;
 
+    void reindex() { index_.clear(); for (const auto& p : items_) index_[p->key()] = p.get(); }
     static std::string stripCR(std::string s) { if (!s.empty() && s.back() == '\r') s.pop_back(); return s; }
     void ensureDir() const {
         auto parent = std::filesystem::path(path_).parent_path();
@@ -40,7 +43,7 @@ public:
 
     // ---------------------------------------------------------- file I/O
     void load() {
-        items_.clear(); skipped_ = 0;
+        items_.clear(); index_.clear(); skipped_ = 0;
         std::ifstream in(path_, std::ios::binary);
         if (!in) return;                                   // first run: nothing yet
         std::string line;
@@ -53,6 +56,7 @@ public:
                 if (item) items_.push_back(std::move(item)); else ++skipped_;
             } catch (const std::exception&) { ++skipped_; }
         }
+        reindex();
     }
 
     void saveAll() const {
@@ -105,17 +109,18 @@ public:
     }
 
     // ---------------------------------------------------------- collection API
-    T* add(std::unique_ptr<T> item) { items_.push_back(std::move(item)); return items_.back().get(); }
+    T* add(std::unique_ptr<T> item) { items_.push_back(std::move(item)); T* p = items_.back().get(); index_[p->key()] = p; return p; }
     T* addAndAppend(std::unique_ptr<T> item) { T* p = add(std::move(item)); appendToFile(*p); return p; }
 
     T* find(const std::string& key) const {
-        auto it = std::find_if(items_.begin(), items_.end(), [&](const std::unique_ptr<T>& p) { return p->key() == key; });
-        return it == items_.end() ? nullptr : it->get();
+        auto it = index_.find(key);
+        return it == index_.end() ? nullptr : it->second;
     }
     bool remove(const std::string& key) {
         auto it = std::remove_if(items_.begin(), items_.end(), [&](const std::unique_ptr<T>& p) { return p->key() == key; });
         bool any = it != items_.end();
         items_.erase(it, items_.end());
+        reindex();
         return any;
     }
     template <typename Pred>

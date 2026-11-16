@@ -9,6 +9,7 @@ namespace util {
 // ---- money formatting (Indian digit grouping, e.g. 12,34,567.50) ----
 std::string number(double v, int decimals = 2);
 std::string money(double v);                 // "₹12,34,567.50"
+std::string moneyShort(double v);            // "₹12,34,568" (no paise, for compact tables)
 std::string fixedWidth(double v);            // zero padded, constant length (for in-place CSV patching)
 
 // ---- time helpers ----
@@ -31,7 +32,10 @@ std::string upper(std::string s);
 std::string lower(std::string s);
 std::vector<std::string> split(const std::string& s, char sep);
 std::string join(const std::vector<std::string>& parts, char sep);
-std::string sanitize(const std::string& s);   // removes commas/newlines so CSV stays valid
+std::string sanitize(const std::string& s);   // removes commas/newlines/pipes (names, nicknames)
+std::string cleanText(const std::string& s);  // trims and drops only newlines (free text kept intact)
+std::string csvEscape(const std::string& s);  // ',' '\n' '\r' '%' -> %2C %0A %0D %25 so free text survives CSV
+std::string csvUnescape(const std::string& s);
 bool isDigits(const std::string& s);
 std::string maskAccount(const std::string& accNo);   // XXXX-1001
 

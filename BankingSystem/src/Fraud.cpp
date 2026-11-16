@@ -29,7 +29,8 @@ bool OddHourRule::check(const Transaction& tx, const FraudContext&) const {
     return !tx.credit() && h >= 1 && h < 4;
 }
 std::string OddHourRule::message(const Transaction& tx) const {
-    return "Debit of " + util::money(tx.amount()) + " at an unusual hour (" + util::fmtShort(tx.timestamp()) + ")";
+    std::string hhmm = util::fmtDateTime(tx.timestamp()).substr(11, 5);
+    return "Debit of " + util::money(tx.amount()) + " at " + hhmm + ", an unusual hour";
 }
 
 bool RepeatedFailureRule::check(const Transaction&, const FraudContext& ctx) const { return ctx.failedOps >= 3; }
