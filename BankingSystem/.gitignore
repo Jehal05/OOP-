@@ -1,0 +1,9 @@
+build/
+bank
+*.o
+data/*
+!data/.gitkeep
+statements/*
+!statements/.gitkeep
+receipts/*
+!receipts/.gitkeep
