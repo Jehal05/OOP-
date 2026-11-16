@@ -30,10 +30,12 @@ public:
     const std::string& accNo() const { return accNo_; }
     const std::string& holder() const { return holder_; }
     void setHolder(const std::string& h);
+    void restoreBalance(double b) { balance_ = b; }          // used only when loading/seeding stored data
     double balance() const { return balance_; }
     time_t openedOn() const { return openedOn_; }
     bool active() const { return active_; }
-    void close() { active_ = false; }
+    // Pays out whatever is left and deactivates the account (used when an admin closes it).
+    double closeAndPayout() { double b = balance_; balance_ = 0; active_ = false; return b; }
 
     // ---- polymorphic behaviour ----
     virtual std::unique_ptr<Account> clone() const = 0;
