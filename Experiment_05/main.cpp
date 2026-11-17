@@ -1,63 +1,40 @@
-// Experiment 5: Runtime polymorphism - virtual functions, abstract base class, Shape hierarchy
+// Experiment 5: Runtime polymorphism with virtual functions and an abstract base class
 #include <iostream>
-#include <vector>
-#include <memory>
-#include <cmath>
-#include <iomanip>
 using namespace std;
 
-class Shape {                                  // abstract base class
+class Shape {                       // abstract class
 public:
-    virtual double area() const = 0;           // pure virtual
-    virtual double perimeter() const = 0;
-    virtual string name() const = 0;
-    virtual ~Shape() = default;
+    virtual double area() = 0;      // pure virtual function
+    virtual void name() { cout << "Shape"; }
+    virtual ~Shape() {}
 };
 
 class Circle : public Shape {
     double r;
 public:
-    explicit Circle(double r) : r(r) {}
-    double area() const override { return M_PI * r * r; }
-    double perimeter() const override { return 2 * M_PI * r; }
-    string name() const override { return "Circle"; }
+    Circle(double r) { this->r = r; }
+    double area() { return 3.14159 * r * r; }
+    void name() { cout << "Circle"; }
 };
 
 class Rectangle : public Shape {
-    double w, h;
+    double l, b;
 public:
-    Rectangle(double w, double h) : w(w), h(h) {}
-    double area() const override { return w * h; }
-    double perimeter() const override { return 2 * (w + h); }
-    string name() const override { return "Rectangle"; }
-};
-
-class Triangle : public Shape {
-    double a, b, c;
-public:
-    Triangle(double a, double b, double c) : a(a), b(b), c(c) {}
-    double area() const override {             // Heron's formula
-        double s = (a + b + c) / 2;
-        return sqrt(s * (s - a) * (s - b) * (s - c));
-    }
-    double perimeter() const override { return a + b + c; }
-    string name() const override { return "Triangle"; }
+    Rectangle(double l, double b) { this->l = l; this->b = b; }
+    double area() { return l * b; }
+    void name() { cout << "Rectangle"; }
 };
 
 int main() {
-    // Shape s;  // ERROR: abstract class cannot be instantiated
-    vector<unique_ptr<Shape>> shapes;
-    shapes.push_back(make_unique<Circle>(5));
-    shapes.push_back(make_unique<Rectangle>(4, 6));
-    shapes.push_back(make_unique<Triangle>(3, 4, 5));
+    Shape* shapes[2];
+    shapes[0] = new Circle(5);
+    shapes[1] = new Rectangle(4, 6);
 
-    cout << fixed << setprecision(2);
-    cout << left << setw(12) << "Shape" << setw(12) << "Area" << "Perimeter\n";
-    double total = 0;
-    for (const auto& s : shapes) {             // runtime dispatch via vtable
-        cout << setw(12) << s->name() << setw(12) << s->area() << s->perimeter() << "\n";
-        total += s->area();
+    for (int i = 0; i < 2; i++) {
+        shapes[i]->name();                       // the right version is chosen at run time
+        cout << " area = " << shapes[i]->area() << endl;
     }
-    cout << "Total area: " << total << "\n";
+
+    for (int i = 0; i < 2; i++) delete shapes[i];
     return 0;
 }
