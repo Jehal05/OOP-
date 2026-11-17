@@ -17,7 +17,6 @@ C++ Object-Oriented Programming lab work: ten experiments and one mini project.
 | `experiment-09` | Experiment 9: Exceptions |
 | `experiment-10` | Experiment 10: File handling |
 | `mini-project` | Nova Bank, a C++17 banking system for the terminal |
-| `web-ui` | Nova Bank plus a version that runs in the browser on localhost |
 
 Open a branch to see its own README, with the aim, how the code works, run instructions, sample output and viva questions.
 
@@ -39,7 +38,6 @@ Open a branch to see its own README, with the aim, how the code works, run instr
 A banking and management system that uses all of the above together: abstract classes, inheritance, polymorphic fraud rules, templates (`Repository<T>`), STL, custom exceptions and CSV persistence.
 
 - `mini-project`: the terminal application, with screenshots, diagrams and a viva Q&A sheet.
-- `web-ui`: the same engine behind a browser interface at `http://localhost:8080`.
 
 ## Compile any experiment
 ```bash
