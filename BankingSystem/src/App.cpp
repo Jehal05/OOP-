@@ -10,13 +10,12 @@
 
 using ui::Kind;
 using ui::Align;
-namespace c = ui::c;
 
 void printChoices(const std::string& label, const std::vector<std::string>& names, size_t perLine) {
     for (size_t i = 0; i < names.size(); i += perLine) {
         std::string row = i == 0 ? " " + label + " " : std::string(label.size() + 2, ' ');
         for (size_t j = i; j < std::min(names.size(), i + perLine); ++j)
-            row += c::cyan() + "[" + std::to_string(j + 1) + "]" + c::reset() + " " + ui::padRight(names[j], 12);
+            row += "[" + std::to_string(j + 1) + "] " + ui::padRight(names[j], 12);
         while (!row.empty() && row.back() == ' ') row.pop_back();
         ui::line(row);
     }
@@ -39,8 +38,8 @@ void App::checkSession() const {
 int App::choose(const std::vector<MenuItem>& items, const std::string& prompt) {
     std::vector<std::string> lines;
     for (const auto& it : items) {
-        std::string key = c::bold() + c::cyan() + "[" + std::to_string(it.key) + "]" + c::reset();
-        lines.push_back(key + " " + ui::padRight(it.label, 26) + c::dim() + it.desc + c::reset());
+        std::string key = "[" + std::to_string(it.key) + "]";
+        lines.push_back(key + " " + ui::padRight(it.label, 26) + it.desc);
     }
     ui::box("Menu", lines);
     for (;;) {
@@ -63,7 +62,7 @@ Category App::pickCategory() {
 
 std::string App::amountCell(const Transaction& t) const {
     std::string txt = (t.credit() ? "+" : "-") + util::money(t.amount());
-    return ui::paint(t.credit() ? c::green() : c::red(), txt);
+    return txt;
 }
 
 void App::receipt(const Transaction& tx, bool save) {
@@ -77,8 +76,8 @@ void App::receipt(const Transaction& tx, bool save) {
     std::vector<std::string> lines;
     for (size_t i = 0; i < kv.size(); i += 2) {
         std::string val = kv[i + 1];
-        if (kv[i] == "Amount") val = ui::paint(tx.credit() ? c::green() : c::red(), val);
-        lines.push_back(c::dim() + ui::padRight(kv[i], 14) + c::reset() + val);
+        if (kv[i] == "Amount") val = val;
+        lines.push_back(ui::padRight(kv[i], 14) + val);
     }
     ui::blank();
     ui::box("TRANSACTION RECEIPT", lines, 60);
@@ -94,23 +93,23 @@ void App::receipt(const Transaction& tx, bool save) {
                 out << k << kv[i + 1] << "\n";
             }
             out << std::string(44, '=') << "\nThank you for banking with Nova Bank.\n";
-            ui::line(c::dim() + "  Receipt saved: " + path + c::reset());
+            ui::line("  Receipt saved: " + path);
         } catch (const std::exception&) { ui::banner(Kind::Warning, "Receipt could not be saved to disk."); }
     }
 }
 
 void App::accountCard(const Account& a) {
     std::vector<std::string> lines = {
-        c::bold() + a.holder() + c::reset() + "   " + c::dim() + util::maskAccount(a.accNo()) + "  |  " + a.typeName() + c::reset(),
-        "Available balance   " + c::bold() + c::green() + util::money(a.balance()) + c::reset() +
-            (a.balance() < 0 ? c::red() + "  (overdrawn)" + c::reset() : ""),
-        c::dim() + a.describe() + c::reset()};
+        a.holder() + "   " + util::maskAccount(a.accNo()) + "  |  " + a.typeName(),
+        "Available balance   " + util::money(a.balance()) +
+            (a.balance() < 0 ? "  (overdrawn)" : ""),
+        a.describe()};
     ui::box("Account", lines);
 }
 
 bool App::askDate(const std::string& prompt, std::optional<time_t>& out) {
     for (;;) {
-        std::string s = ui::readLine(prompt + c::dim() + " (YYYY-MM-DD, Enter to skip)" + c::reset());
+        std::string s = ui::readLine(prompt + " (YYYY-MM-DD, Enter to skip)");
         if (s.empty()) { out.reset(); return true; }
         time_t t;
         if (util::parseDate(s, t)) { out = t; return true; }
@@ -149,8 +148,8 @@ void App::showStatementTable(const std::vector<Transaction>& rows, size_t limit)
     if (body.empty()) { ui::banner(Kind::Info, "No transactions match your filters."); return; }
     ui::table({"Date", "Type", "Category", "Amount", "Balance"}, body,
               {Align::Left, Align::Left, Align::Left, Align::Right, Align::Right});
-    if (rows.size() > shown) ui::line(c::dim() + " Showing " + std::to_string(shown) + " of " + std::to_string(rows.size()) +
-                                      " rows. Export to .txt for the full list." + c::reset());
+    if (rows.size() > shown) ui::line(" Showing " + std::to_string(shown) + " of " + std::to_string(rows.size()) +
+                                      " rows. Export to .txt for the full list.");
 }
 
 // One reusable "smart statement" workflow, used by customers and by admins (for any account).
@@ -189,9 +188,9 @@ void App::statementFlow(const std::string& accNo, const std::string& crumb) {
                     double cr = 0, db = 0;
                     for (const auto& t : rows) (t.credit() ? cr : db) += t.amount();
                     double net = cr - db;
-                    body.push_back({month, std::to_string(rows.size()), ui::paint(c::green(), util::money(cr)),
-                                    ui::paint(c::red(), util::money(db)),
-                                    ui::paint(net >= 0 ? c::green() : c::red(), (net >= 0 ? "+" : "") + util::money(net))});
+                    body.push_back({month, std::to_string(rows.size()), util::money(cr),
+                                    util::money(db),
+                                    (net >= 0 ? "+" : "") + util::money(net)});
                 }
                 ui::screen(crumb + " > Monthly summary");
                 if (body.empty()) ui::banner(Kind::Info, "No transactions yet.");
@@ -202,7 +201,7 @@ void App::statementFlow(const std::string& accNo, const std::string& crumb) {
             }
             if (k == 3) {
                 st.sort(key, asc);
-                ui::banner(Kind::Info, "Generating statement" + std::string(ui::unicodeEnabled() ? "…" : "..."));
+                ui::banner(Kind::Info, "Generating statement" + std::string("..."));
                 std::string path = st.exportText(stmtDir_, f, acc.balance());
                 bank_.logAudit(accNo, "STATEMENT_EXPORTED", path);
                 ui::banner(Kind::Success, "Statement saved to " + path);
@@ -211,7 +210,7 @@ void App::statementFlow(const std::string& accNo, const std::string& crumb) {
             }
             st.sort(key, asc);
             ui::screen(crumb + " > Statement");
-            ui::line(c::dim() + " Account " + util::maskAccount(accNo) + "  |  " + acc.holder() + "  |  Filters: " + f.describe() + c::reset());
+            ui::line(" Account " + util::maskAccount(accNo) + "  |  " + acc.holder() + "  |  Filters: " + f.describe());
             ui::blank();
             std::vector<Transaction> rows = st.rows();
             showStatementTable(rows, 20);
@@ -219,8 +218,8 @@ void App::statementFlow(const std::string& accNo, const std::string& crumb) {
             ui::blank();
             ui::box("Summary", {
                 "Transactions  " + std::to_string(s.count),
-                "Total credits " + ui::paint(c::green(), util::money(s.credits)) + "    Total debits " + ui::paint(c::red(), util::money(s.debits)),
-                "Net change    " + ui::paint(s.net >= 0 ? c::green() : c::red(), (s.net >= 0 ? "+" : "") + util::money(s.net)),
+                "Total credits " + util::money(s.credits) + "    Total debits " + util::money(s.debits),
+                "Net change    " + std::string(s.net >= 0 ? "+" : "") + util::money(s.net),
                 "Average       " + util::money(s.average) + "    Largest " + util::money(s.largest)});
             ui::pause();
         } catch (const BankException& e) { showError(e); ui::pause(); }
@@ -231,12 +230,10 @@ void App::loanTable(const std::vector<Loan*>& loans, bool withAccount) {
     std::vector<std::vector<std::string>> body;
     auto shortType = [](std::string t) { auto p = t.find(" Loan"); return p == std::string::npos ? t : t.substr(0, p); };
     for (const Loan* l : loans) {
-        std::string col = l->status() == LoanStatus::Active ? c::green() : (l->status() == LoanStatus::Pending ? c::yellow() :
-                          (l->status() == LoanStatus::Rejected ? c::red() : c::dim()));
         std::vector<std::string> row = {l->id()};
         if (withAccount) row.push_back(l->accNo());
         row.insert(row.end(), {shortType(l->typeName()), util::moneyShort(l->principal()), util::number(l->annualRate(), 1) + "%",
-                               std::to_string(l->months()) + "m", ui::paint(col, toString(l->status()))});
+                               std::to_string(l->months()) + "m", toString(l->status())});
         if (!withAccount) {
             row.push_back(std::to_string(l->paid()) + "/" + std::to_string(l->months()));
             row.push_back(util::moneyShort(l->outstanding()));
@@ -260,7 +257,7 @@ void App::amortizationTable(const Loan& loan) {
     for (int i = start; i < start + 12 && i <= loan.months(); ++i) {
         const Installment& r = sch[(size_t)i - 1];
         bool paid = loan.status() == LoanStatus::Active && i <= loan.paid();
-        body.push_back({std::to_string(r.month) + (paid ? (ui::unicodeEnabled() ? " ✔" : " *") : ""), util::money(r.emi),
+        body.push_back({std::to_string(r.month) + (paid ? " *" : ""), util::money(r.emi),
                         util::money(r.interest), util::money(r.principal), util::money(r.balance)});
     }
     double totalInterest = 0, totalPay = 0;
@@ -268,16 +265,16 @@ void App::amortizationTable(const Loan& loan) {
     ui::blank();
     ui::table({"Month", "EMI", "Interest", "Principal", "Balance"}, body,
               {Align::Left, Align::Right, Align::Right, Align::Right, Align::Right});
-    ui::line(c::dim() + " Total interest " + util::money(totalInterest) + "   Total payable " + util::money(totalPay) + c::reset());
+    ui::line(" Total interest " + util::money(totalInterest) + "   Total payable " + util::money(totalPay));
 }
 
 void App::emiPreview(const Loan& probe) {
     double totalPay = 0;
     for (const auto& r : probe.schedule()) totalPay += r.emi;               // same figures as the amortization table
     ui::box("EMI Estimate", {
-        probe.typeName() + "   " + c::dim() + "@ " + util::number(probe.annualRate(), 1) + "% p.a." + c::reset(),
+        probe.typeName() + "   @ " + util::number(probe.annualRate(), 1) + "% p.a.",
         "Loan amount   " + util::money(probe.principal()) + "    Tenure " + std::to_string(probe.months()) + " months",
-        "Monthly EMI   " + c::bold() + c::cyan() + util::money(probe.emi()) + c::reset(),
+        "Monthly EMI   " + util::money(probe.emi()),
         "Total interest " + util::money(totalPay - probe.principal()) + "    Total payable " + util::money(totalPay)});
 }
 
@@ -287,7 +284,7 @@ void App::run() {
         ui::screen("Home");
         ui::box("Welcome", {
             "Secure banking for customers and staff.",
-            c::dim() + "Demo logins:  customer SB1001 / 1234   |   admin  admin / admin123" + c::reset()});
+            "Demo logins:  customer SB1001 / 1234   |   admin  admin / admin123"});
         ui::blank();
         int k = choose({{1, "Customer login", "accounts, payments, loans, goals"},
                         {2, "Admin login", "manage accounts, loans and security"},
@@ -325,7 +322,7 @@ void App::customerDashboard(const Customer& cu) {
     const Account& a = bank_.account(cu.linkedAccount());
     int hour = util::hourOf(util::now());
     std::string greet = hour < 12 ? "Good morning" : (hour < 17 ? "Good afternoon" : "Good evening");
-    ui::line(" " + c::bold() + greet + ", " + cu.name() + c::reset());
+    ui::line(" " + greet + ", " + cu.name());
     ui::blank();
     accountCard(a);
     ui::blank();
@@ -335,13 +332,13 @@ void App::customerDashboard(const Customer& cu) {
     std::reverse(last.begin(), last.end());
     std::vector<std::vector<std::string>> body;
     for (const auto& t : last) body.push_back({util::fmtShort(t.timestamp()), toString(t.type()), amountCell(t), util::money(t.balanceAfter())});
-    if (body.empty()) ui::line(c::dim() + " No transactions yet." + c::reset());
+    if (body.empty()) ui::line(" No transactions yet.");
     else ui::table({"Date", "Type", "Amount", "Balance"}, body, {Align::Left, Align::Left, Align::Right, Align::Right});
     size_t unread = bank_.unseenAlerts(a.accNo()).size();
     if (unread) ui::banner(Kind::Warning, std::to_string(unread) + " unread security alert(s). Open [8] Security & Alerts to review.");
     int openEmi = 0;
     for (const Loan* l : bank_.loansOf(a.accNo())) if (l->status() == LoanStatus::Active) ++openEmi;
-    if (openEmi) ui::line(c::dim() + " " + std::to_string(openEmi) + " active loan(s). Next EMI is shown under [5] Loans & EMI." + c::reset());
+    if (openEmi) ui::line(" " + std::to_string(openEmi) + " active loan(s). Next EMI is shown under [5] Loans & EMI.");
     ui::blank();
 }
 
@@ -353,8 +350,8 @@ void App::customerSession(User& user) {
         customerDashboard(cu);
         int k = choose({{1, "Transactions", "deposit, withdraw, transfer, balance"},
                         {2, "Smart statement", "filters, sorting, export, receipts"},
-                        {3, "Spending insights", "category breakdown chart"},
-                        {4, "Savings goals", "targets with progress bars"},
+                        {3, "Spending insights", "category breakdown"},
+                        {4, "Savings goals", "targets and progress"},
                         {5, "Loans & EMI", "apply, pay EMI, amortization"},
                         {6, "Beneficiaries", "saved payees"},
                         {7, "Interest & FD simulator", "what-if projections"},
@@ -395,7 +392,7 @@ void App::transactionsMenu(const std::string& acc) {
 
 void App::doDeposit(const std::string& acc) {
     ui::screen("Home > Customer > Transactions > Deposit");
-    double amt = ui::readAmount("Amount to deposit (" + std::string("\xE2\x82\xB9") + ")");
+    double amt = ui::readAmount("Amount to deposit (Rs)");
     const Transaction& tx = bank_.deposit(acc, amt);
     ui::banner(Kind::Success, "Deposited " + util::money(amt) + " successfully.");
     receipt(tx);
@@ -404,8 +401,8 @@ void App::doDeposit(const std::string& acc) {
 void App::doWithdraw(const std::string& acc) {
     ui::screen("Home > Customer > Transactions > Withdraw");
     const Account& a = bank_.account(acc);
-    ui::line(c::dim() + " You can withdraw up to " + util::money(std::max(0.0, a.spendable())) + c::reset());
-    double amt = ui::readAmount("Amount to withdraw (" + std::string("\xE2\x82\xB9") + ")");
+    ui::line(" You can withdraw up to " + util::money(std::max(0.0, a.spendable())));
+    double amt = ui::readAmount("Amount to withdraw (Rs)");
     Category cat = pickCategory();
     double fee = bank_.fdWithdrawalFee(acc, amt);
     if (fee > 0) {
@@ -435,13 +432,13 @@ void App::doTransfer(const std::string& acc) {
     if (target.empty()) target = util::upper(ui::readLine("Destination account number"));
     const Account& dst = bank_.account(target);                    // throws AccountNotFound for bad numbers
     if (target == acc) throw InvalidAmountException("cannot transfer to the same account");
-    ui::line(c::dim() + " Paying: " + dst.holder() + "  (" + util::maskAccount(dst.accNo()) + ")" + c::reset());
-    double amt = ui::readAmount("Amount to transfer (" + std::string("\xE2\x82\xB9") + ")");
+    ui::line(" Paying: " + dst.holder() + "  (" + util::maskAccount(dst.accNo()) + ")");
+    double amt = ui::readAmount("Amount to transfer (Rs)");
     Category cat = pickCategory();
     double fee = bank_.fdWithdrawalFee(acc, amt);
     if (fee > 0) ui::banner(Kind::Warning, "Early FD withdrawal penalty of " + util::money(fee) + " will apply.");
     ui::box("Confirm transfer", {"To      " + dst.holder() + " (" + util::maskAccount(dst.accNo()) + ")",
-                                 "Amount  " + c::bold() + util::money(amt) + c::reset(), "Purpose " + toString(cat)});
+                                 "Amount  " + util::money(amt), "Purpose " + toString(cat)});
     if (!ui::confirm("Confirm this transfer?")) { ui::banner(Kind::Info, "Transfer cancelled."); return; }
     const Transaction& tx = bank_.transfer(acc, target, amt, cat);
     ui::banner(Kind::Success, "Transferred " + util::money(amt) + " to " + dst.holder() + ".");
@@ -450,7 +447,7 @@ void App::doTransfer(const std::string& acc) {
 
 void App::spendingReport(const std::string& acc) {
     ui::screen("Home > Customer > Spending insights");
-    std::string month = ui::readLine("Month (YYYY-MM) " + c::dim() + "or Enter for all time" + c::reset());
+    std::string month = ui::readLine("Month (YYYY-MM) or Enter for all time");
     auto slices = SpendingAnalyzer::analyze(bank_.history(acc), month);
     ui::blank();
     if (slices.empty()) { ui::banner(Kind::Info, "No categorised spending found for that period."); ui::pause(); return; }
@@ -465,9 +462,9 @@ void App::spendingReport(const std::string& acc) {
         text.push_back(util::money(s.total) + "  " + pct);
     }
     ui::title("Spending by category  " + std::string(month.empty() ? "(all time)" : "(" + month + ")"));
-    ui::barChart(labels, vals, text, 26, 0);
+    ui::list(labels, text);
     ui::blank();
-    ui::line(" Total spent: " + c::bold() + c::red() + util::money(total) + c::reset() + "   Top category: " + c::yellow() + labels[0] + c::reset());
+    ui::line(" Total spent: " + util::money(total) + "   Top category: " + labels[0]);
     ui::pause();
 }
 
@@ -480,15 +477,14 @@ void App::goalsMenu(const std::string& acc) {
             std::vector<std::vector<std::string>> body;
             for (const SavingsGoal* g : goals) {
                 std::string st = g->status(util::now());
-                std::string col = st == "Achieved" ? c::green() : (st == "Overdue" ? c::red() : c::cyan());
-                body.push_back({g->id(), g->name(), ui::progressBar(g->fraction(), 8),
-                                util::moneyShort(g->saved()) + " / " + util::moneyShort(g->target()), ui::paint(col, st)});
+                body.push_back({g->id(), g->name(), ui::percent(g->fraction()),
+                                util::moneyShort(g->saved()) + " / " + util::moneyShort(g->target()), st});
             }
             ui::table({"ID", "Goal", "Progress", "Saved / Target", "Status"}, body);
             for (const SavingsGoal* g : goals)
                 if (g->status(util::now()) == "Active")
-                    ui::line(c::dim() + " " + g->id() + " " + g->name() + ": due " + util::fmtDate(g->deadline()) + ", save " +
-                             util::money(g->requiredMonthly(util::now())) + " per month" + c::reset());
+                    ui::line(" " + g->id() + " " + g->name() + ": due " + util::fmtDate(g->deadline()) + ", save " +
+                             util::money(g->requiredMonthly(util::now())) + " per month");
         }
         ui::blank();
         int k = choose({{1, "Create a goal", "name, target and deadline"}, {2, "Add money to a goal", "moves money from your balance"}, {0, "Back", ""}});
@@ -496,7 +492,7 @@ void App::goalsMenu(const std::string& acc) {
         try {
             if (k == 1) {
                 std::string name = ui::readLine("Goal name (e.g. Laptop)");
-                double target = ui::readAmount("Target amount (" + std::string("\xE2\x82\xB9") + ")");
+                double target = ui::readAmount("Target amount (Rs)");
                 std::optional<time_t> dl;
                 for (;;) { askDate("Deadline", dl); if (dl) break; ui::banner(Kind::Error, "A deadline is required."); }
                 const SavingsGoal& g = bank_.createGoal(acc, name, target, *dl);
@@ -506,7 +502,7 @@ void App::goalsMenu(const std::string& acc) {
                 std::string id = util::upper(ui::readLine("Goal ID (e.g. G001)"));
                 bool mine = std::any_of(goals.begin(), goals.end(), [&](const SavingsGoal* g) { return g->id() == id; });
                 if (!mine) throw BankException("That goal does not belong to your account.");
-                double amt = ui::readAmount("Amount to add (" + std::string("\xE2\x82\xB9") + ")");
+                double amt = ui::readAmount("Amount to add (Rs)");
                 const Transaction& tx = bank_.contributeToGoal(id, amt);
                 ui::banner(Kind::Success, "Added " + util::money(amt) + " to your goal.");
                 receipt(tx);
@@ -525,8 +521,8 @@ void App::loansMenu(const std::string& acc) {
             loanTable(loans);
             for (const Loan* l : loans)
                 if (l->status() == LoanStatus::Active)
-                    ui::line(c::dim() + " " + l->id() + ": next EMI " + util::money(l->nextInstallment()) + "  (" +
-                             std::to_string(l->remainingInstallments()) + " left)" + c::reset());
+                    ui::line(" " + l->id() + ": next EMI " + util::money(l->nextInstallment()) + "  (" +
+                             std::to_string(l->remainingInstallments()) + " left)");
         }
         ui::blank();
         int k = choose({{1, "Apply for a loan", "Home, Education or Personal"},
@@ -538,12 +534,12 @@ void App::loansMenu(const std::string& acc) {
         if (k == 0) return;
         try {
             if (k == 1 || k == 2) {
-                ui::line(c::cyan() + " [1]" + c::reset() + " Home       8.5% p.a.   up to " + util::moneyShort(5000000) + "   max 240 months");
-                ui::line(c::cyan() + " [2]" + c::reset() + " Education  9.5% p.a.   up to " + util::moneyShort(1500000) + "   max 120 months");
-                ui::line(c::cyan() + " [3]" + c::reset() + " Personal  12.5% p.a.   up to " + util::moneyShort(500000) + "   max 60 months");
+                ui::line(" [1] Home       8.5% p.a.   up to " + util::moneyShort(5000000) + "   max 240 months");
+                ui::line(" [2] Education  9.5% p.a.   up to " + util::moneyShort(1500000) + "   max 120 months");
+                ui::line(" [3] Personal  12.5% p.a.   up to " + util::moneyShort(500000) + "   max 60 months");
                 static const char* codes[] = {"HOME", "EDU", "PER"};
                 std::string code = codes[ui::readInt("Choose loan type", 1, 3) - 1];
-                double amt = ui::readAmount("Loan amount (" + std::string("\xE2\x82\xB9") + ")");
+                double amt = ui::readAmount("Loan amount (Rs)");
                 int months = ui::readInt("Tenure in months", 1, 600);
                 if (k == 2) {
                     auto probe = Loan::create(code, "-", acc, amt, months, LoanStatus::Pending, 0, util::now());
@@ -594,7 +590,7 @@ void App::payeesMenu(const std::string& acc) {
                 std::string nick = ui::readLine("Nickname (max 15 chars)");
                 std::string no = util::upper(ui::readLine("Payee account number"));
                 const Account& pa = bank_.account(no);
-                ui::line(c::dim() + " Account holder: " + pa.holder() + c::reset());
+                ui::line(" Account holder: " + pa.holder());
                 if (ui::confirm("Save '" + nick + "' as a beneficiary?", true)) {
                     bank_.addPayee(acc, nick, no);
                     ui::banner(Kind::Success, "Beneficiary saved. Transfers to new payees are monitored for 24 hours.");
@@ -613,7 +609,7 @@ void App::simulatorMenu(const std::string& acc) {
     ui::screen("Home > Customer > Interest & FD simulator");
     const Account& mine = bank_.account(acc);
     double def = std::max(1000.0, std::floor(mine.balance()));
-    ui::line(c::dim() + " Compare what the same amount would earn in each account type." + c::reset());
+    ui::line(" Compare what the same amount would earn in each account type.");
     double principal = ui::readOptionalAmount("Amount to invest", "(Enter for " + util::money(def) + ")").value_or(def);
     if (principal <= 0) principal = def;
     int years = ui::readInt("Years", 1, 20, 5);
@@ -626,18 +622,18 @@ void App::simulatorMenu(const std::string& acc) {
     std::vector<std::vector<std::string>> body;
     for (int y = 0; y < years; ++y)
         body.push_back({std::to_string(y + 1), util::money(rs[(size_t)y].simple), util::money(rt[(size_t)y].simple),
-                        ui::paint(c::green(), util::money(rf[(size_t)y].compound)), util::money(principal)});
+                        util::money(rf[(size_t)y].compound), util::money(principal)});
     ui::blank();
     ui::table({"Year", "Savings 4%", "Student 4.5%", "FD 7% comp.", "Current 0%"}, body,
               {Align::Right, Align::Right, Align::Right, Align::Right, Align::Right}, 22);
-    ui::line(c::dim() + " Savings/Student: simple interest. FD: compounded yearly. Current: none." + c::reset());
+    ui::line(" Savings/Student: simple interest. FD: compounded yearly. Current: none.");
     ui::blank();
     ui::box("Maturity after " + std::to_string(years) + " year(s)", {
         "Savings  " + util::money(principal + sav.calculateInterest(years)) + "   (interest " + util::money(sav.calculateInterest(years)) + ")",
-        "FD       " + c::bold() + c::green() + util::money(principal + fd.calculateInterest(years)) + c::reset() + "   (interest " + util::money(fd.calculateInterest(years)) + ")",
+        "FD       " + util::money(principal + fd.calculateInterest(years)) + "   (interest " + util::money(fd.calculateInterest(years)) + ")",
         "Current  " + util::money(principal + cur.calculateInterest(years)) + "   (no interest)",
-        c::dim() + "Your own account (" + mine.typeName() + ") would earn " + util::money(mine.calculateInterest(years)) + " on " +
-            util::money(mine.balance()) + c::reset()});
+        "Your own account (" + mine.typeName() + ") would earn " + util::money(mine.calculateInterest(years)) + " on " +
+            util::money(mine.balance())});
     ui::pause();
 }
 
@@ -650,10 +646,10 @@ void App::securityMenu(Customer& cu) {
         else {
             std::vector<std::vector<std::string>> body;
             for (const Alert* a : alerts)
-                body.push_back({a->id(), util::fmtShort(a->timestamp()), a->seen() ? "Read" : ui::paint(c::yellow(), "NEW"), a->message()});
+                body.push_back({a->id(), util::fmtShort(a->timestamp()), a->seen() ? "Read" : "NEW", a->message()});
             ui::table({"ID", "When", "Status", "What happened"}, body, {Align::Left, Align::Left, Align::Left, Align::Left}, 44);
             bank_.markAlertsSeen(cu.linkedAccount());
-            ui::line(c::dim() + " If you do not recognise a transaction, contact the bank immediately." + c::reset());
+            ui::line(" If you do not recognise a transaction, contact the bank immediately.");
         }
         ui::blank();
         int k = choose({{1, "Change PIN", "4 digits, old PIN required"}, {0, "Back", ""}});

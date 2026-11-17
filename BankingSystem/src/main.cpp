@@ -6,10 +6,8 @@
 
 static void usage() {
     std::cout << "Nova Bank - Banking & Management System\n"
-                 "Usage: bank [--data DIR] [--ascii] [--no-color] [--help]\n"
+                 "Usage: bank [--data DIR] [--help]\n"
                  "  --data DIR   folder for CSV data (default: ./data, or $BANK_DATA_DIR)\n"
-                 "  --ascii      use plain ASCII boxes instead of Unicode\n"
-                 "  --no-color   disable ANSI colors\n"
                  "Demo logins: customer SB1001/1234, CA2001/2345, FD3001/3456, ST1001/4567 | admin admin/admin123\n";
 }
 
@@ -19,7 +17,7 @@ int main(int argc, char** argv) {
         if (!std::strcmp(argv[i], "--help") || !std::strcmp(argv[i], "-h")) { usage(); return 0; }
         if (!std::strcmp(argv[i], "--data") && i + 1 < argc) dataDir = argv[++i];
     }
-    ui::init(argc, argv);
+    ui::init();
     Bank bank(dataDir);
     try {
         bank.load();

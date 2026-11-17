@@ -11,7 +11,7 @@ SRC      := $(filter-out src/main.cpp,$(wildcard src/*.cpp))
 OBJ      := $(patsubst src/%.cpp,$(BUILD)/%.o,$(SRC))
 TESTS    := $(patsubst tests/%.cpp,$(BUILD)/%,$(wildcard tests/test_*.cpp))
 
-.PHONY: all run test valgrind widths screenshots diagrams check clean
+.PHONY: all run test valgrind diagrams check clean
 all: bank
 
 bank: $(OBJ) $(BUILD)/main.o
@@ -35,16 +35,10 @@ test: $(TESTS)
 valgrind: bank        ## every scripted scenario + integration tests under Valgrind
 	./tools/valgrind_all.sh
 
-widths: bank          ## fail if any screen line exceeds 80 columns
-	python3 tools/check_width.py
-
-screenshots: bank     ## regenerate docs/img/screens/*.png from the real binary
-	python3 tools/make_screenshots.py
-
 diagrams:             ## regenerate docs/img/*.png from docs/diagrams/*.mmd (needs mermaid-cli: mmdc)
 	cd docs/diagrams && for f in *.mmd; do mmdc -q -i $$f -o ../img/$${f%.mmd}.png -p puppeteer.json -b white -s 2; done
 
-check: test widths valgrind   ## run everything
+check: test valgrind   ## run everything
 
 clean:
 	rm -rf $(BUILD) bank

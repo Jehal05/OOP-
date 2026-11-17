@@ -69,8 +69,8 @@ int main() {
     CHECK_THROWS(z.deposit(10), BankException);
 
     // --- formatting ---
-    CHECK(util::money(1234567.5) == "\xE2\x82\xB9" "12,34,567.50");
-    CHECK(util::money(-950) == "-\xE2\x82\xB9" "950.00");
+    CHECK(util::money(1234567.5) == "Rs 12,34,567.50");
+    CHECK(util::money(-950) == "-Rs 950.00");
     CHECK(util::maskAccount("SB1001") == "XXXX-1001");
     return finish("test_account");
 }

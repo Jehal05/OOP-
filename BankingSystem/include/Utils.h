@@ -8,8 +8,8 @@ namespace util {
 
 // ---- money formatting (Indian digit grouping, e.g. 12,34,567.50) ----
 std::string number(double v, int decimals = 2);
-std::string money(double v);                 // "₹12,34,567.50"
-std::string moneyShort(double v);            // "₹12,34,568" (no paise, for compact tables)
+std::string money(double v);                 // "Rs 12,34,567.50"
+std::string moneyShort(double v);            // "Rs 12,34,568" (no paise, for compact tables)
 std::string fixedWidth(double v);            // zero padded, constant length (for in-place CSV patching)
 
 // ---- time helpers ----

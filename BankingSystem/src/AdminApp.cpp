@@ -6,13 +6,12 @@
 
 using ui::Kind;
 using ui::Align;
-namespace c = ui::c;
 
 static void accountTable(const std::vector<Account*>& accs) {
     std::vector<std::vector<std::string>> body;
     for (const Account* a : accs)
         body.push_back({a->accNo(), a->typeName(), a->holder(), util::money(a->balance()),
-                        a->active() ? ui::paint(c::green(), "Active") : ui::paint(c::red(), "Closed")});
+                        a->active() ? "Active" : "Closed"});
     if (body.empty()) { ui::banner(Kind::Info, "No accounts found."); return; }
     ui::table({"Account", "Type", "Holder", "Balance", "Status"}, body,
               {Align::Left, Align::Left, Align::Left, Align::Right, Align::Left});
@@ -25,13 +24,13 @@ void App::adminSession(User& admin) {
         auto pending = bank_.pendingLoans();
         auto alerts = bank_.alertsAwaitingReview();
         auto locked = bank_.lockedUsers();
-        ui::line(" " + c::bold() + "Welcome, " + admin.name() + c::reset());
+        ui::line(" Welcome, " + admin.name());
         ui::blank();
         ui::box("Bank overview", {
-            "Accounts  " + std::to_string(bank_.allAccounts().size()) + "     Total balance  " + c::bold() + c::green() + util::money(bank_.totalBalance()) + c::reset(),
-            "Pending loans  " + (pending.empty() ? c::dim() + "0" + c::reset() : c::yellow() + std::to_string(pending.size()) + c::reset()) +
-                "     Alerts to review  " + (alerts.empty() ? c::dim() + "0" + c::reset() : c::yellow() + std::to_string(alerts.size()) + c::reset()) +
-                "     Locked users  " + (locked.empty() ? c::dim() + "0" + c::reset() : c::red() + std::to_string(locked.size()) + c::reset())});
+            "Accounts  " + std::to_string(bank_.allAccounts().size()) + "     Total balance  " + util::money(bank_.totalBalance()),
+            "Pending loans  " + (pending.empty() ? "0" : std::to_string(pending.size())) +
+                "     Alerts to review  " + (alerts.empty() ? "0" : std::to_string(alerts.size())) +
+                "     Locked users  " + (locked.empty() ? "0" : std::to_string(locked.size()))});
         ui::blank();
         int k = choose({{1, "Accounts", "create, search, update, close, list"},
                         {2, "Transaction history", "statement of any account"},
@@ -71,8 +70,8 @@ void App::adminOpenAccount(const std::string& adminId) {
     std::string code = codes[t - 1];
     std::string name = ui::readLine("Holder full name");
     double minOpen = code == "SAV" ? 1000 : (code == "CUR" ? 5000 : (code == "FD" ? 10000 : 0));
-    ui::line(c::dim() + " Minimum opening deposit: " + util::money(minOpen) + c::reset());
-    double initial = minOpen == 0 ? ui::readOptionalAmount("Opening deposit").value_or(0) : ui::readAmount("Opening deposit (" + std::string("\xE2\x82\xB9") + ")");
+    ui::line(" Minimum opening deposit: " + util::money(minOpen));
+    double initial = minOpen == 0 ? ui::readOptionalAmount("Opening deposit").value_or(0) : ui::readAmount("Opening deposit (Rs)");
     double p1 = code == "STU" ? 4.5 : (code == "FD" ? 7.0 : (code == "CUR" ? 25000.0 : 4.0)), p2 = code == "SAV" ? 1000.0 : 0.0;
     if (code == "CUR") p1 = ui::readOptionalAmount("Overdraft limit (default " + util::money(25000) + ")").value_or(25000.0);
     if (code == "FD") p2 = ui::readInt("Lock-in period in months", 6, 120, 12);
@@ -81,7 +80,7 @@ void App::adminOpenAccount(const std::string& adminId) {
     std::string no = bank_.openAccount(adminId, code, name, initial, pin, p1, p2);
     ui::banner(Kind::Success, "Account opened.");
     accountCard(bank_.account(no));
-    ui::line(c::dim() + " Customer login:  account " + no + " with the PIN you just set." + c::reset());
+    ui::line(" Customer login:  account " + no + " with the PIN you just set.");
 }
 
 void App::adminAccounts(const std::string& adminId) {
@@ -102,7 +101,7 @@ void App::adminAccounts(const std::string& adminId) {
             } else if (k == 3) {
                 std::string no = util::upper(ui::readLine("Account number"));
                 const Account& a = bank_.account(no);
-                ui::line(c::dim() + " Current name: " + a.holder() + c::reset());
+                ui::line(" Current name: " + a.holder());
                 bank_.updateHolder(adminId, no, ui::readLine("New holder name"));
                 ui::banner(Kind::Success, "Account updated.");
             } else if (k == 4) {
@@ -120,13 +119,13 @@ void App::adminAccounts(const std::string& adminId) {
 
 void App::adminInterest(const std::string& adminId) {
     ui::screen("Home > Admin > Apply monthly interest");
-    ui::line(c::dim() + " Credits one month of interest (rate / 12) to every active savings account." + c::reset());
-    ui::line(c::dim() + " It is safe to run again: each account is credited at most once per month." + c::reset());
+    ui::line(" Credits one month of interest (rate / 12) to every active savings account.");
+    ui::line(" It is safe to run again: each account is credited at most once per month.");
     if (!ui::confirm("Apply interest now?")) { ui::banner(Kind::Info, "Cancelled."); ui::pause(); return; }
     auto res = bank_.applyMonthlyInterest(adminId);
     std::vector<std::vector<std::string>> body;
     for (const auto& r : res)
-        body.push_back({r.accNo, r.holder, r.amount > 0 ? ui::paint(c::green(), "+" + util::money(r.amount)) : "-", r.status});
+        body.push_back({r.accNo, r.holder, r.amount > 0 ? "+" + util::money(r.amount) : "-", r.status});
     ui::table({"Account", "Holder", "Interest", "Status"}, body, {Align::Left, Align::Left, Align::Right, Align::Left});
     ui::pause();
 }
@@ -166,16 +165,16 @@ void App::adminAlerts(const std::string& adminId) {
     for (;;) {
         ui::screen("Home > Admin > Fraud alerts");
         auto alerts = bank_.alertsAwaitingReview();
-        ui::line(c::dim() + " " + std::to_string(bank_.fraudRuleCount()) + " fraud rules are active." + c::reset());
+        ui::line(" " + std::to_string(bank_.fraudRuleCount()) + " fraud rules are active.");
         ui::blank();
         if (alerts.empty()) { ui::banner(Kind::Success, "No alerts awaiting review."); ui::pause(); return; }
         std::vector<std::vector<std::string>> body;
         for (const Alert* a : alerts)
-            body.push_back({a->id(), a->accNo(), util::fmtShort(a->timestamp()), ui::paint(c::yellow(), a->rule())});
+            body.push_back({a->id(), a->accNo(), util::fmtShort(a->timestamp()), a->rule()});
         ui::table({"ID", "Account", "When", "Rule"}, body);
-        for (const Alert* a : alerts) ui::line(c::dim() + " " + a->id() + "  " + ui::truncate(a->message(), 70) + c::reset());
+        for (const Alert* a : alerts) ui::line(" " + a->id() + "  " + ui::truncate(a->message(), 70));
         ui::blank();
-        std::string id = util::upper(ui::readLine("Alert ID to mark as reviewed " + c::dim() + "(Enter to go back)" + c::reset()));
+        std::string id = util::upper(ui::readLine("Alert ID to mark as reviewed (Enter to go back)"));
         if (id.empty()) return;
         try {
             bank_.markAlertReviewed(adminId, id);
@@ -199,8 +198,8 @@ void App::adminReports() {
         if (k == 1) {
             std::map<std::string, int> byType;
             for (const Account* a : bank_.allAccounts()) if (a->active()) ++byType[a->typeName()];
-            std::vector<std::string> lines = {"Total deposits ever made   " + c::bold() + util::money(bank_.totalDeposits()) + c::reset(),
-                                              "Total balance held         " + c::bold() + c::green() + util::money(bank_.totalBalance()) + c::reset(), ""};
+            std::vector<std::string> lines = {"Total deposits ever made   " + util::money(bank_.totalDeposits()),
+                                              "Total balance held         " + util::money(bank_.totalBalance()), ""};
             for (const auto& [t, n] : byType) lines.push_back(ui::padRight(t, 18) + std::to_string(n) + " account(s)");
             ui::box("Bank overview", lines);
         } else if (k == 2) {
@@ -209,7 +208,7 @@ void App::adminReports() {
             std::vector<double> vals;
             for (const Account* a : top) { labels.push_back(a->accNo() + " " + a->holder()); vals.push_back(std::max(0.0, a->balance())); text.push_back(util::money(a->balance())); }
             ui::title("Top accounts by balance");
-            ui::barChart(labels, vals, text, 24, 0);
+            ui::list(labels, text);
         } else if (k == 3) {
             int days = ui::readInt("Inactive for at least how many days", 1, 3650, 30);
             auto d = bank_.dormant(days);
@@ -226,8 +225,8 @@ void App::adminReports() {
             for (const auto& [key, v] : totals) {
                 if (shown++ < skip) continue;
                 double net = v.first - v.second;
-                body.push_back({key, ui::paint(c::green(), util::money(v.first)), ui::paint(c::red(), util::money(v.second)),
-                                ui::paint(net >= 0 ? c::green() : c::red(), (net >= 0 ? "+" : "") + util::money(net))});
+                body.push_back({key, util::money(v.first), util::money(v.second),
+                                (net >= 0 ? "+" : "") + util::money(net)});
             }
             ui::table({k == 5 ? "Month" : "Date", "Credits", "Debits", "Net"}, body, {Align::Left, Align::Right, Align::Right, Align::Right});
         }
@@ -243,7 +242,7 @@ void App::adminSecurity(const std::string& adminId) {
         if (locked.empty()) ui::banner(Kind::Success, "No locked users.");
         else {
             std::vector<std::vector<std::string>> body;
-            for (const User* u : locked) body.push_back({u->id(), u->name(), u->role(), ui::paint(c::red(), "LOCKED")});
+            for (const User* u : locked) body.push_back({u->id(), u->name(), u->role(), "LOCKED"});
             ui::table({"User", "Name", "Role", "Status"}, body);
         }
         ui::blank();
@@ -262,7 +261,7 @@ void App::adminSecurity(const std::string& adminId) {
                 else {
                     size_t from = lines.size() > 18 ? lines.size() - 18 : 0;
                     ui::title("Audit log  (" + std::to_string(lines.size() - from) + " of " + std::to_string(lines.size()) + " entries, newest last)");
-                    for (size_t i = from; i < lines.size(); ++i) ui::line(c::dim() + " " + ui::truncate(lines[i], 76) + c::reset());
+                    for (size_t i = from; i < lines.size(); ++i) ui::line(" " + ui::truncate(lines[i], 76));
                 }
             }
         } catch (const BankException& e) { showError(e); }

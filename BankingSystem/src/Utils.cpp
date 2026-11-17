@@ -31,14 +31,14 @@ std::string number(double v, int decimals) {
 
 std::string money(double v) {
     std::string n = number(v);
-    if (!n.empty() && n[0] == '-') return "-\xE2\x82\xB9" + n.substr(1);   // -₹...
-    return "\xE2\x82\xB9" + n;
+    if (!n.empty() && n[0] == '-') return "-Rs " + n.substr(1);
+    return "Rs " + n;
 }
 
 std::string moneyShort(double v) {
     std::string n = number(v, 0);
-    if (!n.empty() && n[0] == '-') return "-\xE2\x82\xB9" + n.substr(1);
-    return "\xE2\x82\xB9" + n;
+    if (!n.empty() && n[0] == '-') return "-Rs " + n.substr(1);
+    return "Rs " + n;
 }
 
 std::string fixedWidth(double v) {

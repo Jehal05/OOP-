@@ -56,10 +56,10 @@ int main() {
     // free text with commas, percent signs and newlines survives a CSV round trip (regression: "₹9,800" lost its comma)
     {
         Repository<Transaction> r(dir + "/notes.csv");
-        r.addAndAppend(std::make_unique<Transaction>("N1", "SB1", TxType::Deposit, Category::Other, 1, 1, now, "Debit of \xE2\x82\xB9" "9,800.00, 100% sure"));
+        r.addAndAppend(std::make_unique<Transaction>("N1", "SB1", TxType::Deposit, Category::Other, 1, 1, now, "Debit of Rs " "9,800.00, 100% sure"));
         Repository<Transaction> back(dir + "/notes.csv");
         back.load();
-        CHECK(back.size() == 1 && back.find("N1")->note() == "Debit of \xE2\x82\xB9" "9,800.00, 100% sure");
+        CHECK(back.size() == 1 && back.find("N1")->note() == "Debit of Rs " "9,800.00, 100% sure");
         Alert al("A1", "SB1", "N1", "Rule", "Large debit of 1,00,000", now);
         auto ab = Alert::fromCsv(al.toCsv());
         CHECK(ab && ab->message() == "Large debit of 1,00,000");

@@ -1,7 +1,7 @@
 # Viva cheat sheet - Nova Bank (Banking & Management System)
 
 **Q1. What does the project do?**
-A console banking system with a customer side and an admin side. Data is saved in CSV files, and a scripted demo mode produces the screenshots in the README.
+A console banking system with a customer side and an admin side. Data is saved in CSV files, and the output is plain text so it runs the same in any terminal.
 
 **Q2. Where did you use inheritance?**
 `Account -> SavingsAccount -> StudentSavingsAccount` is multilevel inheritance; `Account -> CurrentAccount / FixedDepositAccount` is single inheritance. The same idea is used in `User -> Customer / Admin` and `Loan -> HomeLoan / EducationLoan / PersonalLoan`.
@@ -43,7 +43,7 @@ After each deposit, withdrawal and outgoing transfer, `FraudDetector` builds a `
 `EMI = P*r*(1+r)^n / ((1+r)^n - 1)` with `r = annual rate / 12 / 100`. The amortization table splits each EMI into interest (`balance * r`) and principal, and the last installment absorbs rounding drift so the final balance is exactly zero.
 
 **Q15. How do exceptions flow?**
-Domain errors derive from `BankException`. `Bank` throws them, and `App` catches `BankException` at the menu level to show a red banner, so bad input never crashes the program.
+Domain errors derive from `BankException`. `Bank` throws them, and `App` catches `BankException` at the menu level to print an [ERROR] message, so bad input never crashes the program.
 
 **Q16. What STL do you use?**
 `vector` for records, `unordered_map` as the O(1) key index inside `Repository<T>` (this is how beneficiaries, accounts and transactions are found by key), `map` for ordered reports (monthly grouping, daily totals), and the algorithms `sort`, `stable_sort`, `remove_if`, `any_of`, `accumulate`, `max_element`.
@@ -51,11 +51,11 @@ Domain errors derive from `BankException`. `Bank` throws them, and `App` catches
 **Q17. How do you separate UI from logic?**
 All printing and input lives in `ConsoleUI`, `App` and `AdminApp`. `Bank`, `Account`, `Loan` and the rest never write to the console, which is why they are unit-testable.
 
-**Q18. How is the UI kept readable?**
-Every screen is at most 80 columns (checked by `tools/check_width.py`). Colors always come with a symbol or text, there is an ASCII fallback (`--ascii`), and colors can be disabled (`--no-color`).
+**Q18. How is the console output kept simple and readable?**
+Every screen has the same layout (header, breadcrumb, content, numbered menu), messages are tagged `[SUCCESS]`, `[ERROR]`, `[WARNING]` or `[INFO]`, and there are no colors or special characters, so it looks the same in any terminal.
 
 **Q19. How did you test it?**
-Seven test suites with 218 checks (`make test`), scripted end-to-end scenarios, a width checker and Valgrind (`make check`).
+Seven test suites with 218 checks (`make test`), scripted end-to-end scenarios and Valgrind (`make check`).
 
 **Q20. What would you improve next?**
 A real database, stronger password hashing, concurrent sessions with locking, and a GUI or web front end.

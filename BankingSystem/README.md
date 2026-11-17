@@ -1,45 +1,13 @@
 # Nova Bank - Banking & Management System
 
-A complete **C++17 object-oriented banking application** for the terminal: customers and bank staff log in, move money, track spending, save towards goals, take loans, and get protected by a rule-based fraud detector, all with a bank-grade console UI and file-based persistence.
+A complete **C++17 object-oriented banking application** for the terminal: customers and bank staff log in, move money, track spending, save towards goals, take loans, and get protected by a rule-based fraud detector, all as a plain text console program with file-based persistence.
 
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue) ![tests](https://img.shields.io/badge/tests-218%20checks%20passing-brightgreen) ![valgrind](https://img.shields.io/badge/valgrind-0%20leaks%2C%200%20errors-brightgreen) ![deps](https://img.shields.io/badge/dependencies-none-lightgrey)
 
 > Mini project for the Object-Oriented Programming lab (Experiment 11). It combines everything from Experiments 1-10: classes and access specifiers, constructors and the Rule of 5, inheritance, runtime and compile-time polymorphism, templates, STL, exceptions and file I/O.
 
 ## Contents
-[Screenshots](#screenshots) | [Features](#features) | [Quick start](#quick-start) | [Demo logins](#demo-logins) | [Architecture](#architecture) | [Class diagrams](#class-diagrams) | [Flowcharts](#flowcharts) | [OOP concepts used](#oop-concepts-used-and-where) | [Data model](#data-model) | [UI/UX design](#uiux-design) | [Testing](#testing-and-quality) | [Project structure](#project-structure) | [Limitations](#limitations-and-honest-notes) | [Viva Q&A](docs/VIVA.md)
-
----
-
-## Screenshots
-
-Every image below is rendered from the **real program output** (`make screenshots` replays the scripted sessions in `scenarios/` and draws the terminal frames), so they cannot drift from the code.
-
-### Customer
-
-| | |
-|---|---|
-| **Dashboard** - balance card, recent activity, unread alerts, grouped menu<br><img src="docs/img/screens/02_dashboard.png" width="480"> | **Deposit with receipt** - unique reference ID, receipt saved to `receipts/`<br><img src="docs/img/screens/03_deposit_receipt.png" width="480"> |
-| **Transfer** - saved payees, confirmation card, Y/N guard<br><img src="docs/img/screens/04_transfer.png" width="480"> | **Smart statement** - filtered by type, sorted by amount, running balance, summary<br><img src="docs/img/screens/05_smart_statement.png" width="480"> |
-| **Monthly summary**<br><img src="docs/img/screens/06_monthly_summary.png" width="480"> | **Statement export** to a bank-style `.txt` file<br><img src="docs/img/screens/07_statement_export.png" width="480"> |
-| **Spending categories** - text bar chart, top category highlighted<br><img src="docs/img/screens/08_spending_chart.png" width="480"> | **Savings goals** - progress bars and required monthly saving<br><img src="docs/img/screens/09_savings_goals.png" width="480"> |
-| **EMI calculator** - estimate without applying<br><img src="docs/img/screens/10_emi_calculator.png" width="480"> | **Amortization table** - month-by-month interest and principal<br><img src="docs/img/screens/11_amortization.png" width="480"> |
-| **Interest & FD simulator** - same amount in each account type<br><img src="docs/img/screens/12_simulator.png" width="480"> | **Home screen**<br><img src="docs/img/screens/01_home.png" width="480"> |
-
-### Security and fraud
-
-| | |
-|---|---|
-| **PIN lockout** after 3 wrong attempts (masked PIN entry)<br><img src="docs/img/screens/14_lockout.png" width="480"> | **Fraud alerts** raised by the polymorphic rules<br><img src="docs/img/screens/13_fraud_alerts.png" width="480"> |
-| **FD early-withdrawal penalty** shown before the money moves<br><img src="docs/img/screens/15_fd_penalty.png" width="480"> | |
-
-### Admin
-
-| | |
-|---|---|
-| **Admin dashboard** - pending loans, alerts, locked users<br><img src="docs/img/screens/16_admin_dashboard.png" width="480"> | **Open account** - creates the account and the customer login<br><img src="docs/img/screens/17_admin_open.png" width="480"> |
-| **Loan approvals**<br><img src="docs/img/screens/18_admin_loans.png" width="480"> | **Fraud alert review**<br><img src="docs/img/screens/19_admin_fraud.png" width="480"> |
-| **Reports** - richest accounts chart<br><img src="docs/img/screens/20_admin_richest.png" width="480"> | **Append-only audit log**<br><img src="docs/img/screens/21_admin_audit.png" width="480"> |
+[Features](#features) | [Quick start](#quick-start) | [Demo logins](#demo-logins) | [Architecture](#architecture) | [Class diagrams](#class-diagrams) | [Flowcharts](#flowcharts) | [OOP concepts used](#oop-concepts-used-and-where) | [Data model](#data-model) | [Sample output](#sample-output) | [Testing](#testing-and-quality) | [Project structure](#project-structure) | [Limitations](#limitations-and-honest-notes) | [Viva Q&A](docs/VIVA.md)
 
 ---
 
@@ -50,13 +18,13 @@ Every image below is rendered from the **real program output** (`make screenshot
 | # | Feature | What it does |
 |---|---|---|
 | 1 | **Smart Statement** | Filter by date range, type, category and min/max amount; sort by date or amount; running-balance column; summary (credits, debits, net, average, largest); monthly grouping; export to a formatted `.txt` |
-| 2 | **Spending Categories** | Eight categories (`enum class Category`), per-category totals and percentages, text bar chart with the top category highlighted, month filter |
-| 3 | **Savings Goals** | Name, target and deadline; contribute from the balance; progress bar; required monthly saving; Active / Achieved / Overdue status |
+| 2 | **Spending Categories** | Eight categories (`enum class Category`), per-category totals and percentages, sorted from highest to lowest spending, month filter |
+| 3 | **Savings Goals** | Name, target and deadline; contribute from the balance; progress percentage; required monthly saving; Active / Achieved / Overdue status |
 | 4 | **Fraud Alerts** | Five polymorphic `FraudRule`s (large amount, rapid transactions, new payee high value, odd hour, repeated failures); alerts shown at next login and reviewed by admin |
 | 5 | **Loan & EMI** | Home / Education / Personal loans (rate, tenure and limits differ per type), EMI formula, amortization table, admin approval, EMI payments, prepayment |
 | 6 | **PIN Lockout & Audit Log** | 3 wrong PINs lock the user; only an admin unlocks; salted PIN hashes; append-only audit trail of logins, account changes, loan decisions, unlocks and fraud alerts |
 | 7 | **Beneficiaries** | Save payees with a nickname, transfer by picking them, validation (exists, not yourself, no duplicates), new-payee monitoring for 24 h |
-| 8 | **Transaction Receipts** | Reference IDs like `TXN-20261116-000123`, a receipt card after every operation, saved to `receipts/`, lookup by reference |
+| 8 | **Transaction Receipts** | Reference IDs like `TXN-20261116-000123`, a receipt after every operation, saved to `receipts/`, lookup by reference |
 | 9 | **Interest & FD Simulator** | Year-by-year projection comparing Savings, Student, FD and Current; maturity amounts; your own account's projection |
 
 ---
@@ -83,15 +51,12 @@ The first run creates a `data` folder with the demo accounts. If `mingw32-make` 
 g++ -std=c++17 -O2 -Iinclude -static (Get-ChildItem src\*.cpp).FullName -o bank.exe
 .\bank.exe
 ```
-The Makefile links the C++ runtime statically on Windows; without it, Windows can pick up a different `libstdc++-6.dll` from your PATH and the program exits silently.
+The Makefile links the C++ runtime statically on Windows; without it, Windows can pick up a different `libstdc++-6.dll` from your PATH and the program exits silently. The program prints plain ASCII only, so it looks the same in any PowerShell or Command Prompt window.
 
 **3. Options**
 ```powershell
-.\bank.exe --ascii          # plain boxes if the symbols look garbled
-.\bank.exe --no-color       # turn off colors
-.\bank.exe --data mydata    # use another data folder
-$env:BANK_TIMEOUT_SEC = 60; .\bank.exe     # auto-logout after 60 s idle
-chcp 65001                  # run first if the box characters or the rupee sign look wrong
+.\bank.exe --data mydata                # use another data folder
+$env:BANK_TIMEOUT_SEC = 60; .\bank.exe   # auto-logout after 60 s idle
 ```
 To reset to fresh demo data, delete the folder: `Remove-Item -Recurse data`.
 
@@ -100,7 +65,7 @@ To reset to fresh demo data, delete the folder: `Remove-Item -Recurse data`.
 cd BankingSystem
 make && ./bank
 ```
-Extra targets there: `make test`, `make widths`, `make valgrind`, `make check` (all three), `make screenshots`, `make diagrams`, `make clean`.
+Extra targets there: `make test`, `make valgrind`, `make check` (both), `make diagrams`, `make clean`.
 
 ## Demo logins
 
@@ -199,25 +164,92 @@ The Mermaid sources for every diagram are in [`docs/diagrams/`](docs/diagrams) (
 
 Free text (notes, alert messages) is escaped so commas and newlines survive the CSV round trip.
 
-## UI/UX design
+## Console design
 
-- **Consistent screens:** header banner, breadcrumb (`Home > Customer > Statement`), body, and a footer hint.
-- **Meaningful color, never color alone:** green for credits and success, red for debits and errors, yellow for warnings, cyan for headings, grey for hints. Every color is paired with a symbol or word (`+`/`-`, `SUCCESS`, `ERROR`), and `--no-color` / `--ascii` are supported.
-- **Indian digit grouping** (`₹12,34,567.50`) and right-aligned amounts.
-- **Safe input:** every prompt validates and re-asks; amounts accept at most 2 decimals; PIN entry is masked on a real terminal; destructive actions (transfer, close account, prepay, FD penalty) ask for Y/N confirmation.
-- **Feedback:** success/error banners with word-wrapping, receipt cards, attempts-remaining on a wrong PIN, and an idle auto-logout.
-- **80-column rule:** `make widths` fails if any screen line is wider than 80 columns.
+The program is deliberately plain: ordinary text menus, no colors, no box drawing, no charts.
+
+- **Same layout on every screen:** a header, a line showing where you are (`Home > Customer > Statement`), the content, then a numbered menu.
+- **Messages:** `[SUCCESS]`, `[ERROR]`, `[WARNING]` and `[INFO]` lines.
+- **Amounts** use Indian digit grouping, for example `Rs 12,34,567.50`.
+- **Safe input:** every prompt checks what you typed and asks again; amounts accept at most 2 decimals; the PIN shows as `*`; risky actions (transfer, close account, prepay, FD penalty) ask for y/n confirmation.
+- **Idle auto-logout** after 5 minutes (change it with `BANK_TIMEOUT_SEC`).
+
+## Sample output
+
+A short excerpt (login, dashboard and spending summary) from a real run:
+
+```text
+==============================================================================
+ NOVA BANK - Banking Management System
+==============================================================================
+ Home > Customer login
+
+ > Account number SB1001
+ > PIN ****
+
+==============================================================================
+ NOVA BANK - Banking Management System
+==============================================================================
+ Home > Customer > Dashboard
+
+ Good morning, Asha Verma
+
+ Account
+ -------
+   Asha Verma   XXXX-1001  |  Savings
+   Available balance   Rs 1,59,735.13
+   4.00% p.a. simple interest | minimum balance Rs 1,000.00
+
+
+ Recent activity
+ ---------------
+ Date          Type                 Amount         Balance
+ ------------  ------------  -------------  --------------
+ 16 Nov 09:45  Withdraw         -Rs 780.00  Rs 1,59,735.13
+ 15 Nov 17:15  Withdraw       -Rs 3,200.00  Rs 1,60,515.13
+ 14 Nov 11:30  Transfer Out  -Rs 15,000.00  Rs 1,63,715.13
+ 1 active loan(s). Next EMI is shown under [5] Loans & EMI.
+
+ Menu
+ ----
+   [1] Transactions              deposit, withdraw, transfer, balance
+   [2] Smart statement           filters, sorting, export, receipts
+   [3] Spending insights         category breakdown
+   [4] Savings goals             targets and progress
+   [5] Loans & EMI               apply, pay EMI, amortization
+   [6] Beneficiaries             saved payees
+   [7] Interest & FD simulator   what-if projections
+   [8] Security & alerts         fraud alerts, change PIN
+   [9] Logout                    
+
+ > Choose an option 1
+  ...
+
+ Spending by category  (all time)
+ --------------------------------
+  Rent       Rs 65,000.00  54.5%
+  Shopping   Rs 14,200.00  11.9%
+  Food       Rs 11,780.00   9.9%
+  Travel     Rs 9,900.00   8.3%
+  Education  Rs 8,000.00   6.7%
+  Bills      Rs 6,750.00   5.7%
+  Health     Rs 3,700.00   3.1%
+
+ Total spent: Rs 1,19,330.00   Top category: Rent
+
+```
+
+Full sessions are in [`docs/sample_customer_session.txt`](docs/sample_customer_session.txt), [`docs/sample_admin_session.txt`](docs/sample_admin_session.txt) and [`docs/sample_lockout_fraud_session.txt`](docs/sample_lockout_fraud_session.txt). They are recorded from the scripted scenarios in [`scenarios/`](scenarios).
 
 ## Testing and quality
 
 | Check | Command | Result |
 |---|---|---|
 | Unit and integration tests | `make test` | 7 suites, **218 checks** pass (accounts, loans, fraud rules, security, repository, statements, full `Bank` workflows) |
-| Layout | `make widths` | no screen line over 80 columns across all scenarios |
 | Memory safety | `make valgrind` | **0 leaks, 0 errors** across every scenario and the integration tests |
 | Compiler warnings | `-Wall -Wextra` | none |
 
-The scripted sessions in [`scenarios/`](scenarios) drive the real binary end to end and are also the source of the screenshots.
+The scripted sessions in [`scenarios/`](scenarios) drive the real program end to end (they also run under Valgrind).
 
 ## Project structure
 
@@ -227,13 +259,13 @@ BankingSystem/
 ├── src/            implementations + main.cpp
 ├── tests/          7 test suites + a tiny assert harness
 ├── scenarios/      scripted demo sessions (customer, admin, lockout and fraud)
-├── tools/          screenshot renderer, scenario runner, width checker, Valgrind script
-├── docs/           diagrams (.mmd sources), rendered images, VIVA.md
+├── tools/          scenario reader and Valgrind script
+├── docs/           diagrams (.mmd sources and images), sample sessions, VIVA.md
 ├── data/ statements/ receipts/    created at runtime (git-ignored)
 └── Makefile
 ```
 
-About 4,200 lines of C++ in `include/`, `src/` and `tests/`.
+About 4,000 lines of C++ in `include/`, `src/` and `tests/`.
 
 ## Limitations and honest notes
 
@@ -241,7 +273,7 @@ About 4,200 lines of C++ in `include/`, `src/` and `tests/`.
 - **Storage** is plain CSV with a single process; there is no locking, so do not run two instances on the same `data/` folder.
 - **Idle auto-logout** is checked when the next input arrives (a console program cannot interrupt a blocking read).
 - **Demo data** is generated relative to today's date and is only created when `data/` is empty.
-- **Windows** builds use MinGW g++ and a static link (see Quick start); the terminal needs UTF-8 for the box characters, otherwise use `--ascii`.
+- **Windows** builds use MinGW g++ and a static link (see Quick start).
 
 ## Repository branches
 | Branch | Contents |
