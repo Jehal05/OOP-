@@ -7,3 +7,5 @@ statements/*
 !statements/.gitkeep
 receipts/*
 !receipts/.gitkeep
+__pycache__/
+*.pyc
