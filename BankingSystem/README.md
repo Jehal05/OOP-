@@ -61,26 +61,46 @@ Every image below is rendered from the **real program output** (`make screenshot
 
 ---
 
-## Quick start
+## Quick start (Windows PowerShell)
 
-Requirements: a C++17 compiler (g++ 9+ or clang 10+) and `make`. No external libraries.
+You need a C++17 compiler and `make`. No other libraries are used.
 
+**1. Install the compiler once** (gives you `g++` and `mingw32-make`), then close and reopen PowerShell:
+```powershell
+winget install -e --id BrechtSanders.WinLibs.POSIX.UCRT
+g++ --version
+mingw32-make --version
+```
+
+**2. Build and run** from the project folder:
+```powershell
+cd C:\Users\Hp\OOP-\BankingSystem
+mingw32-make
+.\bank.exe
+```
+The first run creates a `data` folder with the demo accounts. If `mingw32-make` fails, compile directly:
+```powershell
+g++ -std=c++17 -O2 -Iinclude -static (Get-ChildItem src\*.cpp).FullName -o bank.exe
+.\bank.exe
+```
+The Makefile links the C++ runtime statically on Windows; without it, Windows can pick up a different `libstdc++-6.dll` from your PATH and the program exits silently.
+
+**3. Options**
+```powershell
+.\bank.exe --ascii          # plain boxes if the symbols look garbled
+.\bank.exe --no-color       # turn off colors
+.\bank.exe --data mydata    # use another data folder
+$env:BANK_TIMEOUT_SEC = 60; .\bank.exe     # auto-logout after 60 s idle
+chcp 65001                  # run first if the box characters or the rupee sign look wrong
+```
+To reset to fresh demo data, delete the folder: `Remove-Item -Recurse data`.
+
+**Linux / macOS / WSL**
 ```bash
 cd BankingSystem
-make            # builds ./bank
-./bank          # first run creates ./data with demo accounts
+make && ./bank
 ```
-
-```text
-./bank --ascii        plain ASCII boxes (for terminals without Unicode)
-./bank --no-color     disable ANSI colors
-./bank --data DIR     use a different data folder (or set BANK_DATA_DIR)
-BANK_TIMEOUT_SEC=60   change the idle auto-logout (default 300 s)
-```
-
-Other targets: `make test`, `make widths`, `make valgrind`, `make check` (all three), `make screenshots`, `make diagrams`, `make clean`.
-
-Developed and tested on Linux with g++ 13. The code guards the few OS-specific parts (masked PIN input, console UTF-8/VT mode, `localtime`) for Windows, but it has not been run there yet; on Windows use a UTF-8 capable terminal such as Windows Terminal.
+Extra targets there: `make test`, `make widths`, `make valgrind`, `make check` (all three), `make screenshots`, `make diagrams`, `make clean`.
 
 ## Demo logins
 
@@ -221,7 +241,7 @@ About 4,200 lines of C++ in `include/`, `src/` and `tests/`.
 - **Storage** is plain CSV with a single process; there is no locking, so do not run two instances on the same `data/` folder.
 - **Idle auto-logout** is checked when the next input arrives (a console program cannot interrupt a blocking read).
 - **Demo data** is generated relative to today's date and is only created when `data/` is empty.
-- **Windows** support is written in but untested (see Quick start).
+- **Windows** builds use MinGW g++ and a static link (see Quick start); the terminal needs UTF-8 for the box characters, otherwise use `--ascii`.
 
 ## Repository branches
 | Branch | Contents |
@@ -238,7 +258,6 @@ About 4,200 lines of C++ in `include/`, `src/` and `tests/`.
 | `experiment-09` | Experiment 9: Exceptions |
 | `experiment-10` | Experiment 10: File handling |
 | `mini-project` | Nova Bank, a C++17 banking system for the terminal |
-| `web-ui` | Nova Bank plus a version that runs in the browser on localhost |
 
 See the `main` branch README for an overview of all ten experiments.
 
