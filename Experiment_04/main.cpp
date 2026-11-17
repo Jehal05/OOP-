@@ -1,4 +1,4 @@
-// Experiment 4: Single and Multilevel Inheritance - University Management
+// Experiment 4: Single and multilevel inheritance (University management)
 #include <iostream>
 #include <string>
 using namespace std;
@@ -8,57 +8,40 @@ protected:
     string name;
     int age;
 public:
-    Person(string n, int a) : name(n), age(a) { cout << "Person ctor: " << name << "\n"; }
-    virtual ~Person() { cout << "Person dtor: " << name << "\n"; }
-    virtual void display() const { cout << "Name: " << name << ", Age: " << age << "\n"; }
+    Person(string n, int a) { name = n; age = a; }
+    void showPerson() { cout << "Name: " << name << ", Age: " << age << endl; }
 };
 
-// Single inheritance: Person -> Student
+// single inheritance: Person -> Student
 class Student : public Person {
 protected:
-    string rollNo;
-    string course;
+    int rollNo;
 public:
-    Student(string n, int a, string r, string c) : Person(n, a), rollNo(r), course(c) {
-        cout << "Student ctor: " << rollNo << "\n";
-    }
-    ~Student() override { cout << "Student dtor: " << rollNo << "\n"; }
-    void display() const override {
-        Person::display();
-        cout << "Roll No: " << rollNo << ", Course: " << course << "\n";
+    Student(string n, int a, int r) : Person(n, a) { rollNo = r; }
+    void showStudent() {
+        showPerson();
+        cout << "Roll no: " << rollNo << endl;
     }
 };
 
-// Multilevel inheritance: Person -> Student -> GraduateStudent
-class GraduateStudent : public Student {
-    string thesisTopic;
-    string supervisor;
+// multilevel inheritance: Person -> Student -> GradStudent
+class GradStudent : public Student {
+    string thesis;
 public:
-    GraduateStudent(string n, int a, string r, string c, string t, string s)
-        : Student(n, a, r, c), thesisTopic(t), supervisor(s) {
-        cout << "GraduateStudent ctor: " << thesisTopic << "\n";
-    }
-    ~GraduateStudent() override { cout << "GraduateStudent dtor\n"; }
-    void display() const override {
-        Student::display();
-        cout << "Thesis: " << thesisTopic << ", Supervisor: " << supervisor << "\n";
+    GradStudent(string n, int a, int r, string t) : Student(n, a, r) { thesis = t; }
+    void showGrad() {
+        showStudent();
+        cout << "Thesis: " << thesis << endl;
     }
 };
 
 int main() {
-    cout << "=== Single inheritance ===\n";
-    Student s("Meera", 20, "S101", "B.Tech CSE");
-    s.display();
+    cout << "--- Single inheritance ---" << endl;
+    Student s("Asha", 19, 101);
+    s.showStudent();
 
-    cout << "\n=== Multilevel inheritance ===\n";
-    GraduateStudent g("Arjun", 24, "G201", "M.Tech AI", "Neural Compression", "Dr. Rao");
-    g.display();
-
-    cout << "\n=== Base pointer to derived (virtual dispatch) ===\n";
-    Person* p = new GraduateStudent("Kiran", 25, "G202", "PhD CS", "Graph Learning", "Dr. Iyer");
-    p->display();
-    delete p;
-
-    cout << "\n=== Scope exit ===\n";
+    cout << "--- Multilevel inheritance ---" << endl;
+    GradStudent g("Ravi", 24, 201, "Machine Learning");
+    g.showGrad();
     return 0;
 }
