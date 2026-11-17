@@ -296,6 +296,25 @@ About 4,200 lines of C++ in `include/`, `src/` and `tests/`.
 - **Demo data** is generated relative to today's date and is only created when `data/` is empty.
 - **Windows** support is written in but untested (see Quick start).
 
+## Repository branches
+| Branch | Contents |
+|---|---|
+| `main` | Index of this repository |
+| `experiment-01` | Experiment 1: Data types and I/O |
+| `experiment-02` | Experiment 2: Class hierarchy |
+| `experiment-03` | Experiment 3: Constructors and Rule of 5 |
+| `experiment-04` | Experiment 4: Inheritance |
+| `experiment-05` | Experiment 5: Runtime polymorphism |
+| `experiment-06` | Experiment 6: Overloading |
+| `experiment-07` | Experiment 7: Templates |
+| `experiment-08` | Experiment 8: STL |
+| `experiment-09` | Experiment 9: Exceptions |
+| `experiment-10` | Experiment 10: File handling |
+| `mini-project` | Nova Bank, a C++17 banking system for the terminal |
+| `web-ui` | Nova Bank plus a version that runs in the browser on localhost |
+
+See the `main` branch README for an overview of all ten experiments.
+
 ## Author
 
 Built by **Jehal05** as the OOP lab mini project. Experiments 1-10 live on the `experiment-01` ... `experiment-10` branches of this repository.
